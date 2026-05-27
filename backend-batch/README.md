@@ -26,3 +26,4 @@ aws lambda에서 처리할 경기 정보 수집 및 사주 생성 함수입니�
 │   └── test_saju.py <- 만세력 함수 테스트
 └── uv.lock
 ```
+![alt text](../assets/image.png)
