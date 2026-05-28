@@ -1,3 +1,5 @@
+import pytest
+
 from src import saju
 
 
@@ -84,3 +86,30 @@ def test_get_game_saju_info(monkeypatch):
     assert result.game_date == "2025-05-27"
     assert result.day_stem == "병"
     assert result.day_branch == "신"
+
+
+@pytest.mark.parametrize(
+    ("day_master", "target_stem", "relation", "ten_god"),
+    [
+        ("갑", "갑", "same", "비견"),
+        ("갑", "을", "same", "겁재"),
+        ("갑", "병", "output", "식신"),
+        ("갑", "정", "output", "상관"),
+        ("갑", "무", "wealth", "편재"),
+        ("갑", "기", "wealth", "정재"),
+        ("갑", "경", "officer", "편관"),
+        ("갑", "신", "officer", "정관"),
+        ("갑", "임", "resource", "편인"),
+        ("갑", "계", "resource", "정인"),
+    ],
+)
+def test_get_ten_god(day_master, target_stem, relation, ten_god):
+    result = saju.get_ten_god(day_master, target_stem)
+
+    assert result.day_master == day_master
+    assert result.target_stem == target_stem
+    assert result.relation == relation
+    assert result.ten_god == ten_god
+    assert result.day_master_element == saju.STEM_INFO[day_master]["element"]
+    assert result.target_element == saju.STEM_INFO[target_stem]["element"]
+    assert result.keywords == saju.TEN_GOD_KEYWORDS[ten_god]

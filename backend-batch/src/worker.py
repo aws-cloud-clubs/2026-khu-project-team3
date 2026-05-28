@@ -1,3 +1,5 @@
+from src.schema import SQSMessage
 
-def work():
+def work(data: SQSMessage):
+    
     pass

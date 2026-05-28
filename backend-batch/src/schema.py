@@ -32,7 +32,16 @@ class GameSaju(BaseModel):
     day_branch: str
 
 
+class TenGodResult(BaseModel):
+    day_master: str
+    target_stem: str
+    day_master_element: str
+    target_element: str
+    relation: str
+    ten_god: str
+    keywords: list[str]
+
+
 class SQSMessage(BaseModel):
     game_saju: GameSaju
     player_saju: PlayerGameSaju
-    

@@ -1,14 +1,75 @@
+import asyncio
+from asyncio import Future
 import re
 from datetime import datetime, date
 from typing import List
 from zoneinfo import ZoneInfo
 
+import requests
 from playwright.sync_api import sync_playwright
 from src.schema import GameSchedule
 
 
 URL = "https://www.koreabaseball.com/Schedule/Schedule.aspx"
+OHASA_URL = "https://www.asahi.co.jp/data/ohaasa2020/horoscope.json"
+CONSTELLATION_MAP = {
+    "01": "양자리",
+    "02": "황소자리",
+    "03": "쌍둥이자리",
+    "04": "게자리",
+    "05": "사자자리",
+    "06": "처녀자리",
+    "07": "천칭자리",
+    "08": "전갈자리",
+    "09": "사수자리",
+    "10": "염소자리",
+    "11": "물병자리",
+    "12": "물고기자리",
+}
 
+async def get_ohaasa_info()-> Future[list[dict]]:
+    """금일 오하아사 순위 출력
+
+    Returns:
+        list[dict]: [
+            {
+                "rank": 1,
+                "constellation": "물병자리",
+                "message": "오늘은 물병자리의 날입니다. 새로운 아이디어와 혁신이 빛나는 하루가 될 것입니다. 창의적인 활동에 참여해보세요."
+            }
+        ]
+    """
+    def fetch() -> list[dict]:
+        response = requests.get(OHASA_URL, timeout=10)
+        response.raise_for_status()
+
+        payload = response.json()
+        today = datetime.now(ZoneInfo("Asia/Seoul")).strftime("%Y%m%d")
+
+        for item in payload:
+            if item.get("onair_date") != today:
+                continue
+
+            details = sorted(
+                item.get("detail", []),
+                key=lambda detail: int(detail["ranking_no"]),
+            )
+            return [
+                {
+                    "rank": int(detail["ranking_no"]),
+                    "constellation": CONSTELLATION_MAP.get(detail["horoscope_st"], ""),
+                    "message": " ".join(
+                        part.strip()
+                        for part in detail.get("horoscope_text", "").split("\t")
+                        if part.strip()
+                    ),
+                }
+                for detail in details
+            ]
+
+        return []
+
+    return asyncio.get_running_loop().run_in_executor(None, fetch)
 
 def scrape_kbo_schedule(date: date | None = None) -> List[GameSchedule]:
     """경기 일정 조회 함수

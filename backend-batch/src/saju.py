@@ -3,7 +3,7 @@ import logging
 
 from sajupy import calculate_saju
 
-from src.schema import GameSaju, PlayerSaju
+from src.schema import GameSaju, PlayerSaju, TenGodResult
 
 logger = logging.getLogger(__name__)
 
@@ -177,3 +177,166 @@ def get_game_saju_info(game_date: str) -> GameSaju:
         },
     )
     return game_saju
+
+STEM_INFO = {
+    "갑": {"element": "목", "yin_yang": "양"},
+    "을": {"element": "목", "yin_yang": "음"},
+    "병": {"element": "화", "yin_yang": "양"},
+    "정": {"element": "화", "yin_yang": "음"},
+    "무": {"element": "토", "yin_yang": "양"},
+    "기": {"element": "토", "yin_yang": "음"},
+    "경": {"element": "금", "yin_yang": "양"},
+    "신": {"element": "금", "yin_yang": "음"},
+    "임": {"element": "수", "yin_yang": "양"},
+    "계": {"element": "수", "yin_yang": "음"},
+}
+
+# 내가 생하는 오행
+GENERATES = {
+    "목": "화",
+    "화": "토",
+    "토": "금",
+    "금": "수",
+    "수": "목",
+}
+
+# 내가 극하는 오행
+CONTROLS = {
+    "목": "토",
+    "토": "수",
+    "수": "화",
+    "화": "금",
+    "금": "목",
+}
+
+
+TEN_GOD_KEYWORDS = {
+    "비견": [
+        "자기주도",
+        "독립성",
+        "승부욕",
+        "자존심",
+        "꾸준함",
+    ],
+    "겁재": [
+        "경쟁심",
+        "돌파력",
+        "공격성",
+        "과감함",
+        "충동성",
+    ],
+    "식신": [
+        "안정감",
+        "꾸준한 생산성",
+        "타격감",
+        "집중력",
+        "기술력",
+    ],
+    "상관": [
+        "창의성",
+        "폭발력",
+        "변칙성",
+        "감정기복",
+        "돌발성",
+    ],
+    "편재": [
+        "승부수",
+        "모험성",
+        "빠른 판단",
+        "공격적 운영",
+        "활동성",
+    ],
+    "정재": [
+        "안정적 운영",
+        "현실감각",
+        "계산적 플레이",
+        "꾸준함",
+        "관리 능력",
+    ],
+    "편관": [
+        "압박감",
+        "강한 책임감",
+        "투쟁심",
+        "긴장감",
+        "카리스마",
+    ],
+    "정관": [
+        "규율",
+        "안정성",
+        "조직력",
+        "침착함",
+        "밸런스",
+    ],
+    "편인": [
+        "직감",
+        "변칙성",
+        "아이디어",
+        "예민함",
+        "독창성",
+    ],
+    "정인": [
+        "회복력",
+        "보호",
+        "안정감",
+        "멘탈 유지",
+        "학습능력",
+    ],
+}
+
+
+def get_relation(day_master_element: str, target_element: str) -> str:
+    if day_master_element == target_element:
+        return "same"
+
+    if GENERATES[day_master_element] == target_element:
+        return "output"
+
+    if CONTROLS[day_master_element] == target_element:
+        return "wealth"
+
+    if GENERATES[target_element] == day_master_element:
+        return "resource"
+
+    if CONTROLS[target_element] == day_master_element:
+        return "officer"
+
+    raise ValueError("알 수 없는 오행 관계")
+
+
+def get_ten_god(day_master: str, target_stem: str) -> TenGodResult:
+    dm = STEM_INFO[day_master]
+    target = STEM_INFO[target_stem]
+
+    relation = get_relation(
+        dm["element"],
+        target["element"]
+    )
+
+    same_yin_yang = dm["yin_yang"] == target["yin_yang"]
+
+    ten_god = ""
+
+    if relation == "same":
+        ten_god = "비견" if same_yin_yang else "겁재"
+
+    elif relation == "output":
+        ten_god = "식신" if same_yin_yang else "상관"
+
+    elif relation == "wealth":
+        ten_god = "편재" if same_yin_yang else "정재"
+
+    elif relation == "officer":
+        ten_god = "편관" if same_yin_yang else "정관"
+
+    elif relation == "resource":
+        ten_god = "편인" if same_yin_yang else "정인"
+
+    return TenGodResult(
+        day_master=day_master,
+        target_stem=target_stem,
+        day_master_element=dm["element"],
+        target_element=target["element"],
+        relation=relation,
+        ten_god=ten_god,
+        keywords=TEN_GOD_KEYWORDS[ten_god],
+    )
