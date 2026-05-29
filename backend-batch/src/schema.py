@@ -9,6 +9,11 @@ class GameSchedule(BaseModel):
     stadium: str
 
 
+class TeamRanking(BaseModel):
+    team: str
+    ranking: int
+
+
 class PlayerSaju(BaseModel):
     name: str
     player_id: int
@@ -43,5 +48,11 @@ class TenGodResult(BaseModel):
 
 
 class SQSMessage(BaseModel):
-    game_saju: GameSaju
-    player_saju: PlayerGameSaju
+    player_id: int
+    game_date: str
+    ten_god_result: TenGodResult
+
+class LLMOutput(BaseModel):
+    lucky_index: int # 행운지수
+    saju_text: str
+    

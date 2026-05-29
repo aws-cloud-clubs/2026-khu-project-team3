@@ -1,12 +1,29 @@
+import asyncio
 import logging
 import os
+from concurrent.futures import ThreadPoolExecutor
+from datetime import date, datetime, time
 from typing import Sequence
+from zoneinfo import ZoneInfo
 
-from src.crawler import scrape_kbo_schedule
+from psycopg2.extras import Json
+
+from src.crawler import crawl, get_ohaasa_info
 from src.db import get_connection
-from src.saju import get_game_saju_info
+from src.queries import (
+    DELETE_ZODIAC_FORTUNE_RANKINGS_BY_DATE_QUERY,
+    GET_DAILY_SAJU_REPORT_FAILED_ID_QUERY,
+    GET_PLAYERS_FOR_SCHEDULED_TEAMS_QUERY,
+    GET_TEAM_ID_BY_NAME_QUERY,
+    INSERT_DAILY_SAJU_REPORT_QUERY,
+    INSERT_PLAYER_SAJU_QUERY,
+    INSERT_ZODIAC_FORTUNE_RANKING_QUERY,
+    UPDATE_TEAM_RANKING_QUERY,
+    UPSERT_GAME_QUERY,
+)
+from src.saju import get_game_saju_info, get_player_saju_info, get_ten_god
 from src.sqs import send_message_to_sqs
-from src.schema import GameSaju, GameSchedule, PlayerGameSaju, SQSMessage
+from src.schema import GameSaju, GameSchedule, PlayerGameSaju, SQSMessage, TeamRanking, TenGodResult
 
 
 logger = logging.getLogger(__name__)
@@ -14,69 +31,114 @@ logger = logging.getLogger(__name__)
 
 def aggregate():
 
-    schedules = scrape_kbo_schedule()
+    # TODO: get_ohaasa_info() 함수로 오하아사(별자리 운세) 조회. Future로 return 되므로 scrape_kbo_schedule 이후에 await하여 결과 받아올것.
+    with ThreadPoolExecutor(max_workers=1) as executor:
+        ohaasa_future = executor.submit(_fetch_ohaasa_info)
+
+        # scrape_kbo_schedule: playwright 쓰므로 오래걸림 이 전에  get_ohaasa_info 호출하고 이후에 결과 받을것
+        crawl_result = crawl()
+        schedules = crawl_result["schedule_info"]
+        ranking_info = crawl_result["ranking_info"]
+        ohaasa_info = ohaasa_future.result()
+
+    with get_connection() as conn:
+        with conn.cursor() as cur:
+            _update_team_rankings(cur, ranking_info, _resolve_ranking_base_date(schedules))
+
     if not schedules:
         logger.info("No KBO games scheduled for target date")
         return
 
+    # TODO: get_ohaasa_info 결과를 db에 적재하는 코드를 ddl.sql을 참고하여 구현하라.
+    if ohaasa_info:
+        with get_connection() as conn:
+            with conn.cursor() as cur:
+                _replace_zodiac_fortune_rankings(cur, schedules[0].game_date, ohaasa_info)
+        pass
+    else:
+        logger.warning(
+            "No Ohaasa fortune rankings found for target date",
+            extra={"game_date": schedules[0].game_date},
+        )
+
     game_saju = get_game_saju_info(schedules[0].game_date)
     print(game_saju)
-    # prompt_version = os.environ["DAILY_SAJU_PROMPT_VERSION"]
+    print(ohaasa_info)
+    prompt_version = os.environ.get("DAILY_SAJU_PROMPT_VERSION", "v1")
 
-    # with get_connection() as conn:
-    #     with conn.cursor() as cur:
-    #         team_id_by_name = _get_team_id_by_name(cur, schedules)
-    #         _upsert_games(cur, schedules, team_id_by_name)
+    with get_connection() as conn:
+        with conn.cursor() as cur:
+            team_id_by_name = _get_team_id_by_name(cur, schedules)
+            _upsert_games(cur, schedules, team_id_by_name)
 
-    #         players = _get_players_for_scheduled_teams(cur, team_id_by_name.values())
-    #         if not players:
-    #             logger.info("No players with saju data found for scheduled teams", extra={"game_date": schedules[0].game_date})
-    #             return
+            players = _get_players_for_scheduled_teams(cur, team_id_by_name.values())
+            if not players:
+                logger.info("No players found for scheduled teams", extra={"game_date": schedules[0].game_date})
+                return
 
-    #         report_id_by_player_id = _prepare_daily_reports(cur, players, game_saju, prompt_version)
+            ten_god_result_by_player_id = {
+                player.player_id: get_ten_god(player.day_master, game_saju.day_stem)
+                for player in players
+            }
+            report_id_by_player_id = _prepare_daily_reports(
+                cur,
+                players,
+                game_saju,
+                prompt_version,
+                ten_god_result_by_player_id,
+            )
 
-    # failed_reports = []
+    failed_reports = []
 
-    # for player in players:
-    #     report_id = report_id_by_player_id.get(player.player_id)
-    #     if report_id is None:
-    #         continue
+    for player in players:
+        report_id = report_id_by_player_id.get(player.player_id)
+        if report_id is None:
+            continue
 
-    #     payload = SQSMessage(game_saju=game_saju, player_saju=player)
+        ten_god_result = ten_god_result_by_player_id.get(player.player_id)
+        if ten_god_result is None:
+            continue
 
-    #     try:
-    #         send_message_to_sqs(payload)
-    #     except Exception as exc:
-    #         logger.exception(
-    #             "Failed to enqueue daily saju report",
-    #             extra={"player_id": player.player_id, "game_date": game_saju.game_date},
-    #         )
-    #         failed_reports.append((report_id, str(exc)))
+        payload = SQSMessage(
+            player_id=player.player_id,
+            game_date=game_saju.game_date,
+            ten_god_result=ten_god_result,
+        )
 
-    # with get_connection() as conn:
-    #     with conn.cursor() as cur:
-    #         for report_id, error_message in failed_reports:
-    #             cur.execute(
-    #                 """
-    #                 UPDATE daily_saju_report
-    #                 SET status = 'failed',
-    #                     error_message = %s,
-    #                     updated_at = now()
-    #                 WHERE id = %s
-    #                 """,
-    #                 (error_message, report_id),
-    #             )
+        try:
+            #send_message_to_sqs(payload)
+            pass
+        except Exception as exc:
+            logger.exception(
+                "Failed to enqueue daily saju report",
+                extra={"player_id": player.player_id, "game_date": game_saju.game_date},
+            )
+            failed_reports.append((report_id, str(exc)))
 
-    # logger.info(
-    #     "Aggregated daily saju reports",
-    #     extra={
-    #         "game_date": game_saju.game_date,
-    #         "game_count": len(schedules),
-    #         "player_count": len(players),
-    #         "queued_count": len(report_id_by_player_id) - len(failed_reports),
-    #         "failed_count": len(failed_reports),
-    #     },
-    # )
+    with get_connection() as conn:
+        with conn.cursor() as cur:
+            for report_id, error_message in failed_reports:
+                cur.execute(
+                    """
+                    UPDATE daily_saju_report
+                    SET status = 'failed',
+                        error_message = %s,
+                        updated_at = now()
+                    WHERE id = %s
+                    """,
+                    (error_message, report_id),
+                )
+
+    logger.info(
+        "Aggregated daily saju reports",
+        extra={
+            "game_date": game_saju.game_date,
+            "game_count": len(schedules),
+            "player_count": len(players),
+            "queued_count": len(report_id_by_player_id) - len(failed_reports),
+            "failed_count": len(failed_reports),
+        },
+    )
 
 
 def _get_team_id_by_name(cur, schedules: Sequence[GameSchedule]) -> dict[str, int]:
@@ -89,7 +151,7 @@ def _get_team_id_by_name(cur, schedules: Sequence[GameSchedule]) -> dict[str, in
     }
 
     cur.execute(
-        "SELECT id, name FROM teams WHERE name = ANY(%s)",
+        GET_TEAM_ID_BY_NAME_QUERY,
         (list(requested_names),),
     )
 
@@ -104,12 +166,7 @@ def _get_team_id_by_name(cur, schedules: Sequence[GameSchedule]) -> dict[str, in
 def _upsert_games(cur, schedules: Sequence[GameSchedule], team_id_by_name: dict[str, int]) -> None:
     for schedule in schedules:
         cur.execute(
-            """
-            INSERT INTO games (game_date, game_time, home_team_id, away_team_id)
-            VALUES (%s, %s, %s, %s)
-            ON CONFLICT (game_date, home_team_id, away_team_id)
-            DO UPDATE SET game_time = EXCLUDED.game_time
-            """,
+            UPSERT_GAME_QUERY,
             (
                 schedule.game_date,
                 schedule.game_time,
@@ -121,20 +178,38 @@ def _upsert_games(cur, schedules: Sequence[GameSchedule], team_id_by_name: dict[
 
 def _get_players_for_scheduled_teams(cur, team_ids) -> list[PlayerGameSaju]:
     cur.execute(
-        """
-        SELECT DISTINCT p.id, p.name, ps.day_master
-        FROM players p
-        JOIN player_saju ps ON ps.player_id = p.id
-        WHERE p.team_id = ANY(%s)
-        ORDER BY p.id
-        """,
+        GET_PLAYERS_FOR_SCHEDULED_TEAMS_QUERY,
         (list(team_ids),),
     )
 
-    return [
-        PlayerGameSaju(player_id=player_id, name=name, day_master=day_master)
-        for player_id, name, day_master in cur.fetchall()
-    ]
+    players = []
+    for player_id, name, birth_date, birth_time, day_master in cur.fetchall():
+        if day_master is None:
+            player_saju = get_player_saju_info(
+                name=name,
+                player_id=player_id,
+                year=str(birth_date.year),
+                month=str(birth_date.month).zfill(2),
+                day=str(birth_date.day).zfill(2),
+                hour=_format_birth_hour(birth_time),
+            )
+            cur.execute(
+                INSERT_PLAYER_SAJU_QUERY,
+                (
+                    player_saju.player_id,
+                    player_saju.year_pillar,
+                    player_saju.month_pillar,
+                    player_saju.day_pillar,
+                    player_saju.hour_pillar,
+                    player_saju.day_master,
+                    Json(player_saju.five_elements),
+                ),
+            )
+            day_master = player_saju.day_master
+
+        players.append(PlayerGameSaju(player_id=player_id, name=name, day_master=day_master))
+
+    return players
 
 
 def _prepare_daily_reports(
@@ -142,38 +217,24 @@ def _prepare_daily_reports(
     players: Sequence[PlayerGameSaju],
     game_saju: GameSaju,
     prompt_version: str,
+    ten_god_result_by_player_id: dict[int, TenGodResult],
 ) -> dict[int, int]:
     report_id_by_player_id = {}
 
     for player in players:
+        ten_god_result = ten_god_result_by_player_id.get(player.player_id)
+        if ten_god_result is None:
+            continue
+
         cur.execute(
-            """
-            INSERT INTO daily_saju_report (
-                player_id,
-                game_date,
-                game_day_stem,
-                game_day_branch,
-                prompt_version,
-                status,
-                error_message
-            )
-            VALUES (%s, %s, %s, %s, %s, 'pending', NULL)
-            ON CONFLICT (player_id, game_date)
-            DO UPDATE SET
-                game_day_stem = EXCLUDED.game_day_stem,
-                game_day_branch = EXCLUDED.game_day_branch,
-                prompt_version = EXCLUDED.prompt_version,
-                status = EXCLUDED.status,
-                error_message = EXCLUDED.error_message,
-                updated_at = now()
-            WHERE daily_saju_report.status = 'failed'
-            RETURNING id
-            """,
+            INSERT_DAILY_SAJU_REPORT_QUERY,
             (
                 player.player_id,
                 game_saju.game_date,
                 game_saju.day_stem,
                 game_saju.day_branch,
+                Json(_to_five_element_interaction(ten_god_result)),
+                Json(_to_ten_god_interaction(ten_god_result)),
                 prompt_version,
             ),
         )
@@ -183,13 +244,7 @@ def _prepare_daily_reports(
             continue
 
         cur.execute(
-            """
-            SELECT id
-            FROM daily_saju_report
-            WHERE player_id = %s
-              AND game_date = %s
-              AND status = 'failed'
-            """,
+            GET_DAILY_SAJU_REPORT_FAILED_ID_QUERY,
             (player.player_id, game_saju.game_date),
         )
         failed_row = cur.fetchone()
@@ -197,3 +252,68 @@ def _prepare_daily_reports(
             report_id_by_player_id[player.player_id] = failed_row[0]
 
     return report_id_by_player_id
+
+
+async def _await_ohaasa_info() -> list[dict]:
+    future = await get_ohaasa_info()
+    return await future
+
+
+def _fetch_ohaasa_info() -> list[dict]:
+    return asyncio.run(_await_ohaasa_info())
+
+
+def _replace_zodiac_fortune_rankings(cur, game_date: str, ohaasa_info: Sequence[dict]) -> None:
+    fortune_date = date.fromisoformat(game_date)
+
+    cur.execute(DELETE_ZODIAC_FORTUNE_RANKINGS_BY_DATE_QUERY, (fortune_date,))
+    for item in ohaasa_info:
+        zodiac_sign = _to_zodiac_sign(item["constellation"])
+        cur.execute(
+            INSERT_ZODIAC_FORTUNE_RANKING_QUERY,
+            (fortune_date, zodiac_sign, item["rank"]),
+        )
+
+
+def _to_zodiac_sign(constellation: str) -> str:
+    if constellation.endswith("자리"):
+        return constellation.removesuffix("자리")
+    return constellation
+
+
+def _update_team_rankings(cur, rankings: Sequence[TeamRanking], ranking_base_date: date) -> None:
+    for ranking in rankings:
+        cur.execute(
+            UPDATE_TEAM_RANKING_QUERY,
+            (ranking.ranking, ranking_base_date, ranking.team),
+        )
+
+
+def _resolve_ranking_base_date(schedules: Sequence[GameSchedule]) -> date:
+    if schedules:
+        return date.fromisoformat(schedules[0].game_date)
+
+    return datetime.now(ZoneInfo("Asia/Seoul")).date()
+
+
+def _format_birth_hour(birth_time: time | None) -> str | None:
+    if birth_time is None:
+        return None
+
+    return str(birth_time.hour).zfill(2)
+
+
+def _to_ten_god_interaction(ten_god_result: TenGodResult) -> dict:
+    return {
+        "relation": ten_god_result.relation,
+        "ten_god": ten_god_result.ten_god,
+        "keywords": ten_god_result.keywords,
+    }
+
+
+def _to_five_element_interaction(ten_god_result: TenGodResult) -> dict:
+    return {
+        "day_master_element": ten_god_result.day_master_element,
+        "target_element": ten_god_result.target_element,
+        "relation": ten_god_result.relation,
+    }
