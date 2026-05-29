@@ -102,7 +102,7 @@ WHERE player_id = %s
   AND game_date = %s
 """
 
-GET_WORKER_TEST_MESSAGE_QUERY = """
+GET_WORKER_TEST_MESSAGES_QUERY = """
 SELECT
     dsr.player_id,
     dsr.game_date,
@@ -114,7 +114,7 @@ WHERE dsr.status IN ('pending', 'failed')
   AND dsr.game_day_stem IS NOT NULL
   AND ps.day_master IS NOT NULL
 ORDER BY dsr.created_at
-LIMIT 1
+LIMIT %s
 """
 
 DELETE_ZODIAC_FORTUNE_RANKINGS_BY_DATE_QUERY = """

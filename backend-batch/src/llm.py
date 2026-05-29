@@ -1,6 +1,7 @@
 import json
 import os
-from openai import OpenAI
+import asyncio
+from openai import AsyncOpenAI
 from pydantic import BaseModel, ValidationError as PydanticValidationError
 from src.schema import TenGodResult, LLMOutput
 from src.prompts import PROMPT
@@ -129,8 +130,8 @@ def _validate_result(output: dict) -> ValidationResult:
 
 
 
-def generate_saju_info(ten_god_result: TenGodResult) -> LLMOutput:
-    client = OpenAI(
+async def generate_saju_info(ten_god_result: TenGodResult) -> LLMOutput:
+    client = AsyncOpenAI(
         api_key=os.environ["UPSTAGE_API_KEY"],
         base_url="https://api.upstage.ai/v1",
     )
@@ -141,7 +142,7 @@ def generate_saju_info(ten_god_result: TenGodResult) -> LLMOutput:
     schema["properties"]["lucky_index"].update({"minimum": 0, "maximum": 100})
 
     for _ in range(3):
-        completion = client.chat.completions.create(
+        completion = await client.chat.completions.create(
             model=model,
             messages=messages, # type: ignore
             response_format={
@@ -181,7 +182,7 @@ def generate_saju_info(ten_god_result: TenGodResult) -> LLMOutput:
     raise ValueError("LLM output validation failed after retries")
 
 
-def main() -> None:
+async def main() -> None:
     good_input = TenGodResult(
         day_master="갑",
         target_stem="병",
@@ -191,7 +192,7 @@ def main() -> None:
         ten_god="식신",
         keywords=["표현력", "활동성", "공격적인 흐름"],
     )
-    result = generate_saju_info(good_input)
+    result = await generate_saju_info(good_input)
     print("[good_input]")
     print(result.model_dump_json(indent=2, ensure_ascii=False))
 
@@ -204,7 +205,7 @@ def main() -> None:
         ten_god="편관",
         keywords=["압박감", "변수", "기복", "불안정한 흐름"],
     )
-    bad_result = generate_saju_info(bad_input)
+    bad_result = await generate_saju_info(bad_input)
     print("[bad_input]")
     print(bad_result.model_dump_json(indent=2, ensure_ascii=False))
 
@@ -212,4 +213,4 @@ def main() -> None:
 if __name__ == "__main__":
     from dotenv import load_dotenv
     load_dotenv()
-    main()
+    asyncio.run(main())
