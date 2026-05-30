@@ -25,7 +25,7 @@ from game_aggregator.sqs import send_message_to_sqs
 logger = logging.getLogger(__name__)
 
 
-def aggregate():
+def aggregate() -> None:
     crawl_result = crawl()
     schedules = crawl_result["schedule_info"]
     ranking_info = crawl_result["ranking_info"]
@@ -82,8 +82,7 @@ def aggregate():
         )
 
         try:
-            #send_message_to_sqs(payload)
-            pass
+            send_message_to_sqs(payload)
         except Exception as exc:
             logger.exception(
                 "Failed to enqueue daily saju report",

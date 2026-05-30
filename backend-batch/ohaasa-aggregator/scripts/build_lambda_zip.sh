@@ -9,7 +9,7 @@ DIST_DIR="${PROJECT_DIR}/dist"
 ZIP_PATH="${DIST_DIR}/ohaasa-aggregator-handler.zip"
 
 PYTHON_VERSION="${PYTHON_VERSION:-3.12}"
-LAMBDA_PLATFORM="${LAMBDA_PLATFORM:-x86_64-manylinux2014}"
+LAMBDA_PLATFORM="${LAMBDA_PLATFORM:-x86_64-manylinux_2_40}"
 
 DEPS=(
   "psycopg2-binary>=2.9.12"

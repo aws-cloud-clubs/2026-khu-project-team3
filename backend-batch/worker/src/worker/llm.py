@@ -8,6 +8,14 @@ from worker.prompts import PROMPT
 import re
 from enum import Enum
 
+
+def create_llm_client() -> AsyncOpenAI:
+    return AsyncOpenAI(
+        api_key=os.environ["UPSTAGE_API_KEY"],
+        base_url="https://api.upstage.ai/v1",
+    )
+
+
 def _build_prompt(input_data: TenGodResult) -> dict:
     return {
         "role": "user",
@@ -130,11 +138,7 @@ def _validate_result(output: dict) -> ValidationResult:
 
 
 
-async def generate_saju_info(ten_god_result: TenGodResult) -> LLMOutput:
-    client = AsyncOpenAI(
-        api_key=os.environ["UPSTAGE_API_KEY"],
-        base_url="https://api.upstage.ai/v1",
-    )
+async def generate_saju_info(ten_god_result: TenGodResult, client: AsyncOpenAI) -> LLMOutput:
     model = os.environ["UPSTAGE_MODEL"]
     messages = [_build_prompt(ten_god_result)]
     schema = LLMOutput.model_json_schema()
@@ -192,7 +196,8 @@ async def main() -> None:
         ten_god="식신",
         keywords=["표현력", "활동성", "공격적인 흐름"],
     )
-    result = await generate_saju_info(good_input)
+    async with create_llm_client() as client:
+        result = await generate_saju_info(good_input, client)
     print("[good_input]")
     print(result.model_dump_json(indent=2, ensure_ascii=False))
 
@@ -205,7 +210,8 @@ async def main() -> None:
         ten_god="편관",
         keywords=["압박감", "변수", "기복", "불안정한 흐름"],
     )
-    bad_result = await generate_saju_info(bad_input)
+    async with create_llm_client() as client:
+        bad_result = await generate_saju_info(bad_input, client)
     print("[bad_input]")
     print(bad_result.model_dump_json(indent=2, ensure_ascii=False))
 

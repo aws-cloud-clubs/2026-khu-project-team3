@@ -9,7 +9,7 @@ if __name__ == "__main__" and __package__ is None:
 from common.db import get_connection
 from common.saju import get_ten_god
 from common.schema import SQSMessage
-from worker.llm import generate_saju_info
+from worker.llm import create_llm_client, generate_saju_info
 from worker.queries import (
     GET_WORKER_TEST_MESSAGES_QUERY,
     MARK_DAILY_SAJU_REPORT_GENERATING_QUERY,
@@ -41,10 +41,11 @@ async def work_batch(messages: list[SQSMessage]) -> list[int]:
         generating_count,
     )
 
-    results = await asyncio.gather(
-        *(generate_saju_info(message.ten_god_result) for message in messages),
-        return_exceptions=True,
-    )
+    async with create_llm_client() as client:
+        results = await asyncio.gather(
+            *(generate_saju_info(message.ten_god_result, client) for message in messages),
+            return_exceptions=True,
+        )
 
     generated_reports = []
     failed_reports = []
