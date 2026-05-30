@@ -1,4 +1,4 @@
-from src.aggregator import aggregate
+from game_aggregator.aggregator import aggregate
 
 def handler(event, context):
     aggregate()

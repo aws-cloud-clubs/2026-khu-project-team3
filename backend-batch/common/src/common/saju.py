@@ -3,7 +3,7 @@ import logging
 
 from sajupy import calculate_saju
 
-from src.schema import GameSaju, PlayerSaju, TenGodResult
+from common.schema import GameSaju, PlayerSaju, TenGodResult
 
 logger = logging.getLogger(__name__)
 

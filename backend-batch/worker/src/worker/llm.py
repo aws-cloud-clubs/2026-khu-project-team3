@@ -3,8 +3,8 @@ import os
 import asyncio
 from openai import AsyncOpenAI
 from pydantic import BaseModel, ValidationError as PydanticValidationError
-from src.schema import TenGodResult, LLMOutput
-from src.prompts import PROMPT
+from common.schema import TenGodResult, LLMOutput
+from worker.prompts import PROMPT
 import re
 from enum import Enum
 

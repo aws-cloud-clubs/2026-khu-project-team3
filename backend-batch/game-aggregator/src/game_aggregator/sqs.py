@@ -2,7 +2,7 @@ import os
 
 import boto3
 
-from src.schema import SQSMessage
+from common.schema import SQSMessage
 
 
 def send_message_to_sqs(message: SQSMessage) -> None:

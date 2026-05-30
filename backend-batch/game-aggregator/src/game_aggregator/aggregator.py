@@ -1,58 +1,38 @@
 import logging
 import os
-from concurrent.futures import ThreadPoolExecutor
 from datetime import date, datetime, time
 from typing import Sequence
 from zoneinfo import ZoneInfo
 
 from psycopg2.extras import Json
 
-from src.crawler import crawl, get_ohaasa_info
-from src.db import get_connection
-from src.queries import (
+from common.db import get_connection
+from common.saju import get_game_saju_info, get_player_saju_info, get_ten_god
+from common.schema import GameSaju, GameSchedule, PlayerGameSaju, SQSMessage, TeamRanking, TenGodResult
+from game_aggregator.crawler import crawl
+from game_aggregator.queries import (
     GET_DAILY_SAJU_REPORT_FAILED_ID_QUERY,
     GET_PLAYERS_FOR_SCHEDULED_TEAMS_QUERY,
     GET_TEAM_ID_BY_NAME_QUERY,
     INSERT_DAILY_SAJU_REPORT_QUERY,
     INSERT_PLAYER_SAJU_QUERY,
     UPDATE_TEAM_RANKING_QUERY,
-    UPSERT_ZODIAC_FORTUNE_RANKING_QUERY,
     UPSERT_GAME_QUERY,
 )
-from src.saju import get_game_saju_info, get_player_saju_info, get_ten_god
-from src.sqs import send_message_to_sqs
-from src.schema import GameSaju, GameSchedule, PlayerGameSaju, SQSMessage, TeamRanking, TenGodResult
+from game_aggregator.sqs import send_message_to_sqs
 
 
 logger = logging.getLogger(__name__)
 
 
 def aggregate():
-
-    with ThreadPoolExecutor(max_workers=1) as executor:
-        ohaasa_future = executor.submit(get_ohaasa_info)
-
-        crawl_result = crawl()
-        schedules = crawl_result["schedule_info"]
-        ranking_info = crawl_result["ranking_info"]
-        ohaasa_info = ohaasa_future.result()
+    crawl_result = crawl()
+    schedules = crawl_result["schedule_info"]
+    ranking_info = crawl_result["ranking_info"]
 
     with get_connection() as conn:
         with conn.cursor() as cur:
             _update_team_rankings(cur, ranking_info, _resolve_ranking_base_date(schedules))
-
-    fortune_date = schedules[0].game_date if schedules else datetime.now(ZoneInfo("Asia/Seoul")).date().isoformat()
-
-    # TODO: get_ohaasa_info 결과를 db에 적재하는 코드를 ddl.sql을 참고하여 구현하라.
-    if ohaasa_info:
-        with get_connection() as conn:
-            with conn.cursor() as cur:
-                _upsert_zodiac_fortune_rankings(cur, fortune_date, ohaasa_info)
-    else:
-        logger.warning(
-            "No Ohaasa fortune rankings found for target date",
-            extra={"fortune_date": fortune_date},
-        )
 
     if not schedules:
         logger.info("No KBO games scheduled for target date")
@@ -60,7 +40,6 @@ def aggregate():
 
     game_saju = get_game_saju_info(schedules[0].game_date)
     print(game_saju)
-    print(ohaasa_info)
     prompt_version = os.environ.get("DAILY_SAJU_PROMPT_VERSION", "v1")
 
     with get_connection() as conn:
@@ -250,23 +229,6 @@ def _prepare_daily_reports(
 
     return report_id_by_player_id
 
-def _upsert_zodiac_fortune_rankings(cur, game_date: str, ohaasa_info: Sequence[dict]) -> None:
-    fortune_date = date.fromisoformat(game_date)
-
-    for item in ohaasa_info:
-        zodiac_sign = _to_zodiac_sign(item["constellation"])
-        cur.execute(
-            UPSERT_ZODIAC_FORTUNE_RANKING_QUERY,
-            (fortune_date, zodiac_sign, item["rank"]),
-        )
-
-
-def _to_zodiac_sign(constellation: str) -> str:
-    if constellation.endswith("자리"):
-        return constellation.removesuffix("자리")
-    return constellation
-
-
 def _update_team_rankings(cur, rankings: Sequence[TeamRanking], ranking_base_date: date) -> None:
     for ranking in rankings:
         cur.execute(
@@ -295,6 +257,10 @@ def _to_ten_god_interaction(ten_god_result: TenGodResult) -> dict:
         "ten_god": ten_god_result.ten_god,
         "keywords": ten_god_result.keywords,
     }
+
+
+def _get_ten_god_interaction(player: PlayerGameSaju, game_saju: GameSaju) -> dict:
+    return _to_ten_god_interaction(get_ten_god(player.day_master, game_saju.day_stem))
 
 
 def _to_five_element_interaction(ten_god_result: TenGodResult) -> dict:
