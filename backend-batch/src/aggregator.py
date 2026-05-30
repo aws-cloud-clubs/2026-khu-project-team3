@@ -1,4 +1,3 @@
-import asyncio
 import logging
 import os
 from concurrent.futures import ThreadPoolExecutor
@@ -11,14 +10,13 @@ from psycopg2.extras import Json
 from src.crawler import crawl, get_ohaasa_info
 from src.db import get_connection
 from src.queries import (
-    DELETE_ZODIAC_FORTUNE_RANKINGS_BY_DATE_QUERY,
     GET_DAILY_SAJU_REPORT_FAILED_ID_QUERY,
     GET_PLAYERS_FOR_SCHEDULED_TEAMS_QUERY,
     GET_TEAM_ID_BY_NAME_QUERY,
     INSERT_DAILY_SAJU_REPORT_QUERY,
     INSERT_PLAYER_SAJU_QUERY,
-    INSERT_ZODIAC_FORTUNE_RANKING_QUERY,
     UPDATE_TEAM_RANKING_QUERY,
+    UPSERT_ZODIAC_FORTUNE_RANKING_QUERY,
     UPSERT_GAME_QUERY,
 )
 from src.saju import get_game_saju_info, get_player_saju_info, get_ten_god
@@ -31,11 +29,9 @@ logger = logging.getLogger(__name__)
 
 def aggregate():
 
-    # TODO: get_ohaasa_info() 함수로 오하아사(별자리 운세) 조회. Future로 return 되므로 scrape_kbo_schedule 이후에 await하여 결과 받아올것.
     with ThreadPoolExecutor(max_workers=1) as executor:
-        ohaasa_future = executor.submit(_fetch_ohaasa_info)
+        ohaasa_future = executor.submit(get_ohaasa_info)
 
-        # scrape_kbo_schedule: playwright 쓰므로 오래걸림 이 전에  get_ohaasa_info 호출하고 이후에 결과 받을것
         crawl_result = crawl()
         schedules = crawl_result["schedule_info"]
         ranking_info = crawl_result["ranking_info"]
@@ -45,21 +41,22 @@ def aggregate():
         with conn.cursor() as cur:
             _update_team_rankings(cur, ranking_info, _resolve_ranking_base_date(schedules))
 
-    if not schedules:
-        logger.info("No KBO games scheduled for target date")
-        return
+    fortune_date = schedules[0].game_date if schedules else datetime.now(ZoneInfo("Asia/Seoul")).date().isoformat()
 
     # TODO: get_ohaasa_info 결과를 db에 적재하는 코드를 ddl.sql을 참고하여 구현하라.
     if ohaasa_info:
         with get_connection() as conn:
             with conn.cursor() as cur:
-                _replace_zodiac_fortune_rankings(cur, schedules[0].game_date, ohaasa_info)
-        pass
+                _upsert_zodiac_fortune_rankings(cur, fortune_date, ohaasa_info)
     else:
         logger.warning(
             "No Ohaasa fortune rankings found for target date",
-            extra={"game_date": schedules[0].game_date},
+            extra={"fortune_date": fortune_date},
         )
+
+    if not schedules:
+        logger.info("No KBO games scheduled for target date")
+        return
 
     game_saju = get_game_saju_info(schedules[0].game_date)
     print(game_saju)
@@ -253,24 +250,13 @@ def _prepare_daily_reports(
 
     return report_id_by_player_id
 
-
-async def _await_ohaasa_info() -> list[dict]:
-    future = await get_ohaasa_info()
-    return await future
-
-
-def _fetch_ohaasa_info() -> list[dict]:
-    return asyncio.run(_await_ohaasa_info())
-
-
-def _replace_zodiac_fortune_rankings(cur, game_date: str, ohaasa_info: Sequence[dict]) -> None:
+def _upsert_zodiac_fortune_rankings(cur, game_date: str, ohaasa_info: Sequence[dict]) -> None:
     fortune_date = date.fromisoformat(game_date)
 
-    cur.execute(DELETE_ZODIAC_FORTUNE_RANKINGS_BY_DATE_QUERY, (fortune_date,))
     for item in ohaasa_info:
         zodiac_sign = _to_zodiac_sign(item["constellation"])
         cur.execute(
-            INSERT_ZODIAC_FORTUNE_RANKING_QUERY,
+            UPSERT_ZODIAC_FORTUNE_RANKING_QUERY,
             (fortune_date, zodiac_sign, item["rank"]),
         )
 

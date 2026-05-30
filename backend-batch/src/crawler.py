@@ -1,5 +1,4 @@
-import asyncio
-from asyncio import Future
+import logging
 from pprint import pprint
 import re
 from datetime import datetime, date
@@ -10,6 +9,8 @@ import requests
 from playwright.sync_api import Page, sync_playwright
 from src.schema import GameSchedule, TeamRanking
 
+
+logger = logging.getLogger(__name__)
 
 URL = "https://www.koreabaseball.com/Schedule/Schedule.aspx"
 DAUM_KBO_RANKING_URL = "https://sports.daum.net/record/KBO"
@@ -35,7 +36,7 @@ class CrawlResult(TypedDict):
     ranking_info: list[TeamRanking]
 
 
-async def get_ohaasa_info()-> Future[list[dict]]:
+def get_ohaasa_info() -> list[dict]:
     """금일 오하아사 순위 출력
 
     Returns:
@@ -47,37 +48,42 @@ async def get_ohaasa_info()-> Future[list[dict]]:
             }
         ]
     """
-    def fetch() -> list[dict]:
-        response = requests.get(OHASA_URL, timeout=10)
-        response.raise_for_status()
+    response = requests.get(OHASA_URL, timeout=10)
+    response.raise_for_status()
 
-        payload = response.json()
-        today = datetime.now(ZoneInfo("Asia/Seoul")).strftime("%Y%m%d")
+    payload = response.json()
+    today = datetime.now(ZoneInfo("Asia/Seoul")).strftime("%Y%m%d")
 
-        for item in payload:
-            if item.get("onair_date") != today:
-                continue
+    for item in payload:
+        if item.get("onair_date") != today:
+            continue
 
-            details = sorted(
-                item.get("detail", []),
-                key=lambda detail: int(detail["ranking_no"]),
-            )
-            return [
-                {
-                    "rank": int(detail["ranking_no"]),
-                    "constellation": CONSTELLATION_MAP.get(detail["horoscope_st"], ""),
-                    "message": " ".join(
-                        part.strip()
-                        for part in detail.get("horoscope_text", "").split("\t")
-                        if part.strip()
-                    ),
-                }
-                for detail in details
-            ]
+        details = sorted(
+            item.get("detail", []),
+            key=lambda detail: int(detail["ranking_no"]),
+        )
+        return [
+            {
+                "rank": int(detail["ranking_no"]),
+                "constellation": CONSTELLATION_MAP.get(detail["horoscope_st"], ""),
+                "message": " ".join(
+                    part.strip()
+                    for part in detail.get("horoscope_text", "").split("\t")
+                    if part.strip()
+                ),
+            }
+            for detail in details
+        ]
 
-        return []
-
-    return asyncio.get_running_loop().run_in_executor(None, fetch)
+    latest_onair_date = max(
+        (item.get("onair_date") for item in payload if item.get("onair_date")),
+        default=None,
+    )
+    logger.info(
+        "Ohaasa source has no ranking for today; source may not be updated yet",
+        extra={"expected_onair_date": today, "latest_onair_date": latest_onair_date},
+    )
+    return []
 
 
 def crawl(date: date | None = None) -> CrawlResult:

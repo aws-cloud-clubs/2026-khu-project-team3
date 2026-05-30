@@ -1,5 +1,3 @@
-import asyncio
-
 import pytest
 
 from src import crawler
@@ -58,11 +56,7 @@ def test_get_ohaasa_info(monkeypatch):
     monkeypatch.setattr(crawler.requests, "get", lambda *args, **kwargs: FakeResponse(payload))
     monkeypatch.setattr(crawler, "datetime", FakeDateTime)
 
-    async def run():
-        future = await crawler.get_ohaasa_info()
-        return await future
-
-    result = asyncio.run(run())
+    result = crawler.get_ohaasa_info()
 
     assert result == [
         {
@@ -86,22 +80,14 @@ def test_get_ohaasa_info_returns_empty_when_today_data_missing(monkeypatch):
     )
     monkeypatch.setattr(crawler, "datetime", FakeDateTime)
 
-    async def run():
-        future = await crawler.get_ohaasa_info()
-        return await future
-
-    result = asyncio.run(run())
+    result = crawler.get_ohaasa_info()
 
     assert result == []
 
 
 @pytest.mark.live
 def test_get_ohaasa_info_live():
-    async def run():
-        future = await crawler.get_ohaasa_info()
-        return await future
-
-    result = asyncio.run(run())
+    result = crawler.get_ohaasa_info()
 
     assert isinstance(result, list)
     assert result
