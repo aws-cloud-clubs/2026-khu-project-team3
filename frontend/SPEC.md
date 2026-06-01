@@ -386,11 +386,11 @@ export interface Fortune {
 | id | name | fullName | emoji | abbr | gradient |
 |---|---|---|---|---|---|
 | kia | KIA | KIA 타이거즈 | 🐯 | K | #EA0029→#C4001D |
-| samsung | 삼성 | 삼성 라이온즈 | ⭐ | S | #074CA1→#0B5FA5 |
+| samsung | 삼성 | 삼성 라이온즈 | 🦁 | S | #074CA1→#0B5FA5 |
 | lg | LG | LG 트윈스 | — | L | #C30452→#A00040 |
 | doosan | 두산 | 두산 베어스 | 🐻 | D | #002B5B→#1464A6 |
 | kt | KT | KT 위즈 | ⚡ | KT | #1428A0→#1E3FA0 |
-| ssg | SSG | SSG 랜더스 | 🦁 | S | #CF1329→#A00E1F |
+| ssg | SSG | SSG 랜더스 | ⭐ | S | #CF1329→#A00E1F |
 | lotte | 롯데 | 롯데 자이언츠 | 🐠 | L | #041E42→#0D2240 |
 | hanwha | 한화 | 한화 이글스 | 🦅 | H | #F76E11→#FF9F29 |
 | nc | NC | NC 다이노스 | 🦈 | N | #315288→#1E3A5F |
