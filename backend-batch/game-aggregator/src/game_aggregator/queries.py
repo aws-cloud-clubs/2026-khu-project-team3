@@ -48,7 +48,7 @@ INSERT INTO daily_saju_report (
     status,
     error_message
 )
-VALUES (%s, %s, %s, %s, %s, %s, %s, 'pending', NULL)
+VALUES (%s, %s, %s, %s, %s, %s, %s, 'PENDING', NULL)
 ON CONFLICT (player_id, game_date)
 DO UPDATE SET
     game_day_stem = EXCLUDED.game_day_stem,
@@ -59,7 +59,7 @@ DO UPDATE SET
     status = EXCLUDED.status,
     error_message = EXCLUDED.error_message,
     updated_at = now()
-WHERE daily_saju_report.status = 'failed'
+WHERE daily_saju_report.status = 'FAILED'
 RETURNING id
 """
 
@@ -68,5 +68,5 @@ SELECT id
 FROM daily_saju_report
 WHERE player_id = %s
   AND game_date = %s
-  AND status = 'failed'
+  AND status = 'FAILED'
 """

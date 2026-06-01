@@ -1,11 +1,10 @@
-package com.sajuhomerun.backend_api.team;
+package com.sajuhomerun.backend_api.domain.team;
 
 
-import com.sajuhomerun.backend_api.player.Player;
+import com.sajuhomerun.backend_api.domain.player.Player;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDate;
 import java.util.ArrayList;

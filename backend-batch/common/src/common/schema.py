@@ -22,7 +22,7 @@ class PlayerSaju(BaseModel):
     day_pillar: str
     hour_pillar: str | None = None
     day_master: str
-    five_elements: dict[str, int]  # 오행 분포 정보 예: {"목": 3, "화": 2, "토": 1, "금": 0, "수": 0}
+    five_elements: dict[str, int]  # 오행 분포 정보 예: {"wood": 3, "fire": 2, "earth": 1, "metal": 0, "water": 0}
 
 
 class PlayerGameSaju(BaseModel):

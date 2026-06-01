@@ -96,7 +96,7 @@ def aggregate() -> None:
                 cur.execute(
                     """
                     UPDATE daily_saju_report
-                    SET status = 'failed',
+                    SET status = 'FAILED',
                         error_message = %s,
                         updated_at = now()
                     WHERE id = %s

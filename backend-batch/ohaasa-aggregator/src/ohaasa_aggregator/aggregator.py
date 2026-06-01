@@ -31,14 +31,7 @@ def _upsert_zodiac_fortune_rankings(cur, fortune_date: str, ohaasa_info: Sequenc
     parsed_fortune_date = date.fromisoformat(fortune_date)
 
     for item in ohaasa_info:
-        zodiac_sign = _to_zodiac_sign(item["constellation"])
         cur.execute(
             UPSERT_ZODIAC_FORTUNE_RANKING_QUERY,
-            (parsed_fortune_date, zodiac_sign, item["rank"]),
+            (parsed_fortune_date, item["constellation"], item["rank"]),
         )
-
-
-def _to_zodiac_sign(constellation: str) -> str:
-    if constellation.endswith("자리"):
-        return constellation.removesuffix("자리")
-    return constellation
