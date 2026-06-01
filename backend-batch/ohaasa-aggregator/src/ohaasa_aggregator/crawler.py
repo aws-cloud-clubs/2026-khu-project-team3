@@ -9,18 +9,18 @@ logger = logging.getLogger(__name__)
 
 OHASA_URL = "https://www.asahi.co.jp/data/ohaasa2020/horoscope.json"
 CONSTELLATION_MAP = {
-    "01": "양자리",
-    "02": "황소자리",
-    "03": "쌍둥이자리",
-    "04": "게자리",
-    "05": "사자자리",
-    "06": "처녀자리",
-    "07": "천칭자리",
-    "08": "전갈자리",
-    "09": "사수자리",
-    "10": "염소자리",
-    "11": "물병자리",
-    "12": "물고기자리",
+    "01": "ARIES",
+    "02": "TAURUS",
+    "03": "GEMINI",
+    "04": "CANCER",
+    "05": "LEO",
+    "06": "VIRGO",
+    "07": "LIBRA",
+    "08": "SCORPIO",
+    "09": "SAGITTARIUS",
+    "10": "CAPRICORN",
+    "11": "AQUARIUS",
+    "12": "PISCES",
 }
 
 

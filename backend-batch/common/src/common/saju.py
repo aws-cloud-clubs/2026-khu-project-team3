@@ -63,6 +63,14 @@ ELEMENT_BY_BRANCH = {
     "子": "수",
 }
 
+ELEMENT_KEY_BY_KOREAN = {
+    "목": "wood",
+    "화": "fire",
+    "토": "earth",
+    "금": "metal",
+    "수": "water",
+}
+
 
 def _pillar_to_korean(pillar: str) -> str:
     return "".join(STEM_TO_KOREAN.get(char, BRANCH_TO_KOREAN.get(char, char)) for char in pillar)
@@ -73,7 +81,7 @@ def _stem_to_korean(stem: str) -> str:
 
 
 def _count_five_elements(saju_result: dict[str, str], include_hour: bool) -> dict[str, int]:
-    counts = {"목": 0, "화": 0, "토": 0, "금": 0, "수": 0}
+    counts = {element: 0 for element in ELEMENT_KEY_BY_KOREAN.values()}
 
     stems = [saju_result["year_stem"], saju_result["month_stem"], saju_result["day_stem"]]
     branches = [saju_result["year_branch"], saju_result["month_branch"], saju_result["day_branch"]]
@@ -83,10 +91,10 @@ def _count_five_elements(saju_result: dict[str, str], include_hour: bool) -> dic
         branches.append(saju_result["hour_branch"])
 
     for stem in stems:
-        counts[ELEMENT_BY_STEM[stem]] += 1
+        counts[ELEMENT_KEY_BY_KOREAN[ELEMENT_BY_STEM[stem]]] += 1
 
     for branch in branches:
-        counts[ELEMENT_BY_BRANCH[branch]] += 1
+        counts[ELEMENT_KEY_BY_KOREAN[ELEMENT_BY_BRANCH[branch]]] += 1
 
     return counts
 

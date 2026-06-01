@@ -1,3 +1,7 @@
 spring:
   application:
     name: backend-api
+  datasource:
+    url: localhost
+    username: postgres
+    password: postgres
