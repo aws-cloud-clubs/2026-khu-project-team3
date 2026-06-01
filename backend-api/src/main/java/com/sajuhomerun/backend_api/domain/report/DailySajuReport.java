@@ -7,6 +7,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Entity
 @Getter
@@ -36,4 +37,7 @@ public class DailySajuReport {
     @Enumerated(EnumType.STRING)
     @Column(name = "status")
     private ReportStatus reportStatus;
+
+    @Column(name = "generated_at")
+    private LocalDateTime generatedAt;
 }
