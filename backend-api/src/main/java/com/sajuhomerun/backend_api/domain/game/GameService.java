@@ -7,12 +7,14 @@ import com.sajuhomerun.backend_api.domain.game.dto.TeamLuckyScoreRanking;
 import com.sajuhomerun.backend_api.domain.player.PlayerRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Objects;
 
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class GameService {
     private final GameRepository gameRepository;
     private final PlayerRepository playerRepository;
