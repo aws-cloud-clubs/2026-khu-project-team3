@@ -1,0 +1,15 @@
+# 실제 사용 시 이 파일을 terraform.tfvars 로 복사하여 값 채움 (tfvars 는 .gitignore 처리됨)
+# 또는 환경변수로 주입:  $env:TF_VAR_db_password="..."
+
+# 필수
+db_password = "change-me-strong-password"
+
+# 선택 (LLM worker)
+upstage_api_key = ""
+upstage_model   = "solar-pro2"
+
+# 선택 (알람 이메일 구독)
+alarm_email = ""
+
+# 백엔드 컨테이너 이미지 (준비되면 지정; 비우면 EC2 에서 컨테이너 미기동)
+backend_image_uri = ""
