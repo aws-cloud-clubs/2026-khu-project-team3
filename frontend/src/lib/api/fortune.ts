@@ -25,7 +25,7 @@ export async function getFortuneByPlayerId(id: string): Promise<Fortune | null> 
 
     return {
       playerId: id,
-      summary: daily_fortune.fortune_text,
+      summary: daily_fortune.report_text,
       cards: [
         {
           variant: 'horoscope',
