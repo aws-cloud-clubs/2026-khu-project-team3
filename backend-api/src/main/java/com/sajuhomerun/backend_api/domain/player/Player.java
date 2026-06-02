@@ -20,6 +20,9 @@ public class Player {
     @Column(nullable = false)
     private String name;
 
+    @Column(name = "profile_image_path")
+    private String profileImagePath;
+
     private String position;
 
     @Column(name = "birth_date", nullable = false)
