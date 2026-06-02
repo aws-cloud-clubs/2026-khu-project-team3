@@ -12,6 +12,7 @@ PYTHON_VERSION="${PYTHON_VERSION:-3.12}"
 LAMBDA_PLATFORM="${LAMBDA_PLATFORM:-x86_64-manylinux_2_40}"
 
 DEPS=(
+  "openai>=2.38.0"
   "psycopg2-binary>=2.9.12"
   "pydantic>=2.13.4"
   "python-dotenv>=1.2.1"

@@ -2,6 +2,9 @@ CREATE TABLE teams ( -- 팀 테이블
     id BIGSERIAL PRIMARY KEY,
     name TEXT NOT NULL UNIQUE,
 
+    -- S3 base URL을 제외한 구단 대표 이미지 경로
+    logo_image_path TEXT,
+
     -- 최신 팀 순위
     ranking INTEGER,
 
@@ -63,6 +66,9 @@ CREATE TABLE players ( -- 선수 테이블
         ON DELETE CASCADE,
 
     name TEXT NOT NULL,
+
+    -- S3 base URL을 제외한 선수 대표 이미지 경로
+    profile_image_path TEXT,
 
     -- 포지션
     position TEXT NULL,
