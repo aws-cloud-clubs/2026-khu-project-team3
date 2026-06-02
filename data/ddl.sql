@@ -48,6 +48,12 @@ CREATE TYPE report_status AS ENUM (
     'FAILED'
 );
 
+CREATE TABLE app_settings ( -- 애플리케이션 공통 설정 테이블
+    setting_key VARCHAR(100) PRIMARY KEY,
+    setting_value TEXT NOT NULL,
+    updated_at TIMESTAMP DEFAULT now()
+);
+
 CREATE TABLE players ( -- 선수 테이블
     id BIGSERIAL PRIMARY KEY,
 

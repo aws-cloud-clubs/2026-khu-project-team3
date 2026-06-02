@@ -16,6 +16,15 @@ DO UPDATE SET
     stadium = EXCLUDED.stadium
 """
 
+UPSERT_SERVICE_TODAY_QUERY = """
+INSERT INTO app_settings (setting_key, setting_value)
+VALUES ('service_today', %s)
+ON CONFLICT (setting_key)
+DO UPDATE SET
+    setting_value = EXCLUDED.setting_value,
+    updated_at = now()
+"""
+
 GET_PLAYERS_FOR_SCHEDULED_TEAMS_QUERY = """
 SELECT DISTINCT p.id, p.name, p.birth_date, p.birth_time, ps.day_master
 FROM players p

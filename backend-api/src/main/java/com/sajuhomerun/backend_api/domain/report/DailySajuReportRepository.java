@@ -9,4 +9,6 @@ import java.util.Optional;
 
 public interface DailySajuReportRepository extends JpaRepository<DailySajuReport, Long> {
     Optional<DailySajuReport> findByGameDateAndPlayer(LocalDate gameDate, Player player);
+
+    Optional<DailySajuReport> findTopByPlayerOrderByGameDateDescIdDesc(Player player);
 }

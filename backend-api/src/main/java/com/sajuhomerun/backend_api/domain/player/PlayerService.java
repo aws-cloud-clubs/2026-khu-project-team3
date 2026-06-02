@@ -11,7 +11,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
-import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -31,9 +30,10 @@ public class PlayerService {
 
         DailySajuReport report = dailySajuReportRepository.findByGameDateAndPlayer(
                 gameDate, player
-        ).orElseThrow(
-                () -> new IllegalArgumentException("해당 경기일에 운세가 없습니다.")
-        );
+        ).or(() -> dailySajuReportRepository.findTopByPlayerOrderByGameDateDescIdDesc(player))
+                .orElseThrow(
+                        () -> new IllegalArgumentException("운세가 없습니다.")
+                );
 
         ZodiacFortuneRanking zodiac = zodiacFortuneRankingRepository.findByZodiacSign(
                 player.getZodiacSign()
@@ -58,6 +58,7 @@ public class PlayerService {
                 ),
                 new ZodiacFortune(
                         toKoreanZodiacSign(zodiac.getZodiacSign()),
+                        zodiac.getFortuneDate(),
                         zodiac.getRank(),
                         zodiac.getFortuneText()
                 )

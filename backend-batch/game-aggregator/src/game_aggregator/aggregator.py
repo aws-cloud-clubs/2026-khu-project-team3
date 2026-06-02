@@ -18,6 +18,7 @@ from game_aggregator.queries import (
     INSERT_PLAYER_SAJU_QUERY,
     UPDATE_TEAM_RANKING_QUERY,
     UPSERT_GAME_QUERY,
+    UPSERT_SERVICE_TODAY_QUERY,
 )
 from game_aggregator.sqs import send_message_to_sqs
 
@@ -63,6 +64,7 @@ def aggregate() -> None:
                 prompt_version,
                 ten_god_result_by_player_id,
             )
+            _upsert_service_today(cur, game_saju.game_date)
 
     failed_reports = []
 
@@ -150,6 +152,10 @@ def _upsert_games(cur, schedules: Sequence[GameSchedule], team_id_by_name: dict[
                 team_id_by_name[schedule.away_team],
             ),
         )
+
+
+def _upsert_service_today(cur, service_today: str) -> None:
+    cur.execute(UPSERT_SERVICE_TODAY_QUERY, (service_today,))
 
 
 def _get_players_for_scheduled_teams(cur, team_ids) -> list[PlayerGameSaju]:

@@ -3,6 +3,12 @@
 
 BEGIN;
 
+INSERT INTO app_settings (setting_key, setting_value)
+VALUES ('service_today', '2026-06-02')
+ON CONFLICT (setting_key) DO UPDATE SET
+  setting_value = EXCLUDED.setting_value,
+  updated_at = now();
+
 INSERT INTO teams (name, ranking, ranking_base_date) VALUES
   ('테스트 홈', 1, DATE '2026-06-02'),
   ('테스트 원정', 2, DATE '2026-06-02')
