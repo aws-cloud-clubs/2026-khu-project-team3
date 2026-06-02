@@ -2,10 +2,14 @@ spring:
   application:
     name: backend-api
   datasource:
-    url: jdbc:postgresql://localhost:5432/saju_homerun
+    url: jdbc:postgresql://localhost:5432/saju_test
     username: postgres
     password: postgres
     driver-class-name: org.postgresql.Driver
+
+  jackson:
+    property-naming-strategy: SNAKE_CASE
+
   jpa:
     hibernate:
       ddl-auto: validate

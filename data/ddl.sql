@@ -48,6 +48,12 @@ CREATE TYPE report_status AS ENUM (
     'FAILED'
 );
 
+CREATE TABLE app_settings ( -- 애플리케이션 공통 설정 테이블
+    setting_key VARCHAR(100) PRIMARY KEY,
+    setting_value TEXT NOT NULL,
+    updated_at TIMESTAMP DEFAULT now()
+);
+
 CREATE TABLE players ( -- 선수 테이블
     id BIGSERIAL PRIMARY KEY,
 
@@ -119,6 +125,9 @@ CREATE TABLE games ( -- 경기 정보 테이블
 
     -- 경기 시작 시간
     game_time TIME NULL,
+
+    -- 경기장
+    stadium VARCHAR(50) NULL,
 
     -- 홈팀
     home_team_id BIGINT NOT NULL
@@ -210,6 +219,9 @@ CREATE TABLE zodiac_fortune_rankings ( -- 별자리별 최신 운세 순위 테�
 
     -- 별자리 순위 (1~12)
     rank INTEGER NOT NULL,
+
+    -- 별자리 운세 멘트
+    fortune_text TEXT NOT NULL,
 
     created_at TIMESTAMP DEFAULT now(),
     updated_at TIMESTAMP DEFAULT now(),
