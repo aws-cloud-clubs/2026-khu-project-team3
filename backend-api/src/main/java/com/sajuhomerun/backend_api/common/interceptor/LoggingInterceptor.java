@@ -4,8 +4,11 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
+import org.slf4j.MDC;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.HandlerInterceptor;
+
+import java.util.UUID;
 
 @Slf4j
 @Component
@@ -21,6 +24,11 @@ public class LoggingInterceptor
             @NonNull HttpServletResponse response,
             @NonNull Object handler
     ) {
+
+        MDC.put(
+                "requestId",
+                UUID.randomUUID().toString()
+        );
 
         request.setAttribute(
                 START_TIME,
@@ -74,5 +82,6 @@ public class LoggingInterceptor
         else {
             log.info(message);
         }
+        MDC.clear();
     }
 }

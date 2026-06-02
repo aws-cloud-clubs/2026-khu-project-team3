@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+
+    <property
+            name="PATTERN"
+            value="%d{HH:mm:ss.SSS} [%-20thread] [%-36X{requestId}] %-5level %-40logger{40} - %msg%n"/>
+
+    <appender
+            name="CONSOLE"
+            class="ch.qos.logback.core.ConsoleAppender">
+
+        <encoder>
+            <pattern>${PATTERN}</pattern>
+        </encoder>
+
+    </appender>
+
+    <root level="INFO">
+        <appender-ref ref="CONSOLE"/>
+    </root>
+
+</configuration>

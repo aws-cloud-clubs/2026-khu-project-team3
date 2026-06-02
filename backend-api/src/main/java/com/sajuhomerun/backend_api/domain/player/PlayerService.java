@@ -7,11 +7,13 @@ import com.sajuhomerun.backend_api.domain.zodiac.ZodiacFortuneRanking;
 import com.sajuhomerun.backend_api.domain.zodiac.ZodiacFortuneRankingRepository;
 import com.sajuhomerun.backend_api.domain.zodiac.ZodiacSign;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -24,21 +26,58 @@ public class PlayerService {
             Long playerId,
             LocalDate gameDate
     ){
-        Player player = playerRepository.findPlayerByIdWithTeam(playerId).orElseThrow(
-                () -> new IllegalArgumentException("선수를 찾을 수 없습니다.")
+        log.info("Loading player detail. playerId={}, gameDate={}", playerId, gameDate);
+
+        Player player = playerRepository.findPlayerByIdWithTeam(playerId).orElseThrow(() -> {
+            log.error("Player not found. playerId={}", playerId);
+            return new IllegalArgumentException("선수를 찾을 수 없습니다.");
+        });
+
+        log.debug(
+                "Player found. playerId={}, teamId={}, zodiacSign={}",
+                player.getId(),
+                player.getTeam().getId(),
+                player.getZodiacSign()
         );
 
         DailySajuReport report = dailySajuReportRepository.findByGameDateAndPlayer(
                 gameDate, player
-        ).or(() -> dailySajuReportRepository.findTopByPlayerOrderByGameDateDescIdDesc(player))
-                .orElseThrow(
-                        () -> new IllegalArgumentException("운세가 없습니다.")
-                );
+        ).or(() -> {
+            log.warn(
+                    "Daily fortune report not found for requested date. playerId={}, gameDate={}",
+                    player.getId(),
+                    gameDate
+            );
+            return dailySajuReportRepository.findTopByPlayerOrderByGameDateDescIdDesc(player);
+        }).orElseThrow(() -> {
+            log.error("No fortune report exists for player. playerId={}", player.getId());
+            return new IllegalArgumentException("운세가 없습니다.");
+        });
+
+        log.debug(
+                "Fortune report selected. playerId={}, reportId={}, reportGameDate={}, status={}",
+                player.getId(),
+                report.getId(),
+                report.getGameDate(),
+                report.getReportStatus()
+        );
 
         ZodiacFortuneRanking zodiac = zodiacFortuneRankingRepository.findByZodiacSign(
                 player.getZodiacSign()
-        ).orElseThrow(
-                () -> new IllegalArgumentException("별자리 정보가 없습니다.")
+        ).orElseThrow(() -> {
+            log.error(
+                    "Zodiac fortune ranking not found. playerId={}, zodiacSign={}",
+                    player.getId(),
+                    player.getZodiacSign()
+            );
+            return new IllegalArgumentException("별자리 정보가 없습니다.");
+        });
+
+        log.info(
+                "Loaded player detail. playerId={}, reportGameDate={}, zodiacSign={}",
+                player.getId(),
+                report.getGameDate(),
+                zodiac.getZodiacSign()
         );
 
         return new PlayerDetailResponse(
