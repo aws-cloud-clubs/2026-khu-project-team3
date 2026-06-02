@@ -7,5 +7,6 @@ public record PlayerWithLuckyIndex (
        Long id,
        String name,
        String position,
-       Integer luckyIndex
+       Integer luckyIndex,
+       String profileImageUrl
 ){}

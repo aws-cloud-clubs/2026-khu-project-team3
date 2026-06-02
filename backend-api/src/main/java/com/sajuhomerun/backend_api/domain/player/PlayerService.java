@@ -47,9 +47,11 @@ public class PlayerService {
                         player.getName(),
                         new TeamInfo(
                                 player.getTeam().getId(),
-                                player.getTeam().getName()
+                                player.getTeam().getName(),
+                                player.getTeam().getLogoImagePath()
                         ),
-                        player.getPosition()
+                        player.getPosition(),
+                        player.getProfileImagePath()
                 ),
                 new DailyFortune(
                         report.getLuckyIndex(),

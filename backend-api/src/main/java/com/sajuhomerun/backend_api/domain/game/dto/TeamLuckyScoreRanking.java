@@ -6,6 +6,7 @@ public record TeamLuckyScoreRanking(
         Long id,
         String name,
         Integer luckyIndex,
-        List<PlayerWithLuckyIndex> players
+        List<PlayerWithLuckyIndex> players,
+        String logoUrl
 ) {
 }

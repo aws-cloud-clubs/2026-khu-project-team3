@@ -22,7 +22,7 @@ public interface PlayerRepository extends JpaRepository<Player, Long> {
     );
 
     @Query("""
-            select p.id, p.name, p.position, r.luckyIndex
+            select p.id, p.name, p.position, r.luckyIndex, p.profileImagePath
             from Player p
             join DailySajuReport r on r.player.id = p.id
             where p.team.id = :teamId and r.gameDate = :gameDate

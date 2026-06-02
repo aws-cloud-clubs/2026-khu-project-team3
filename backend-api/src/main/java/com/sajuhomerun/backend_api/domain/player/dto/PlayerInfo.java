@@ -4,6 +4,7 @@ public record PlayerInfo(
         Long id,
         String name,
         TeamInfo team,
-        String position
+        String position,
+        String profileImageUrl
 ) {
 }

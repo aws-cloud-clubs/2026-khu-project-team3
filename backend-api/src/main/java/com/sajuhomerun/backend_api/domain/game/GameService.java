@@ -43,7 +43,7 @@ public class GameService {
         int awayTeamAvgLuckyIndex = ((int) awayTeamPlayer
                 .stream()
                 .map(PlayerWithLuckyIndex::luckyIndex)
-                .filter(luckyIndex -> luckyIndex != null)
+                .filter(Objects::nonNull)
                 .mapToInt(Integer::intValue)
                 .average().orElse(0.0));
 
@@ -52,9 +52,9 @@ public class GameService {
                         game.getId(), game.getGameDate(), game.getGameTime(), game.getStadium()
                 ),
                 new TeamLuckyScoreRanking(
-                    game.getHomeTeam().getId(), game.getHomeTeam().getName(), homeTeamAvgLuckyIndex, homeTeamPlayer),
+                    game.getHomeTeam().getId(), game.getHomeTeam().getName(), homeTeamAvgLuckyIndex, homeTeamPlayer, game.getHomeTeam().getLogoImagePath()),
                 new TeamLuckyScoreRanking(
-                    game.getAwayTeam().getId(), game.getAwayTeam().getName(), awayTeamAvgLuckyIndex, awayTeamPlayer)
+                    game.getAwayTeam().getId(), game.getAwayTeam().getName(), awayTeamAvgLuckyIndex, awayTeamPlayer, game.getAwayTeam().getLogoImagePath())
         );
     }
 }
