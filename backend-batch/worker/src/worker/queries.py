@@ -1,6 +1,6 @@
 MARK_DAILY_SAJU_REPORT_GENERATING_QUERY = """
 UPDATE daily_saju_report
-SET status = 'generating',
+SET status = 'GENERATING',
     attempt_count = attempt_count + 1,
     error_message = NULL,
     updated_at = now()
@@ -10,7 +10,7 @@ WHERE player_id = %s
 
 UPDATE_DAILY_SAJU_REPORT_GENERATED_QUERY = """
 UPDATE daily_saju_report
-SET status = 'generated',
+SET status = 'GENERATED',
     report_text = %s,
     lucky_index = %s,
     error_message = NULL,
@@ -22,7 +22,7 @@ WHERE player_id = %s
 
 UPDATE_DAILY_SAJU_REPORT_FAILED_QUERY = """
 UPDATE daily_saju_report
-SET status = 'failed',
+SET status = 'FAILED',
     error_message = %s,
     updated_at = now()
 WHERE player_id = %s
@@ -37,7 +37,7 @@ SELECT
     dsr.game_day_stem
 FROM daily_saju_report dsr
 JOIN player_saju ps ON ps.player_id = dsr.player_id
-WHERE dsr.status IN ('pending', 'failed')
+WHERE dsr.status IN ('PENDING', 'FAILED')
   AND dsr.game_day_stem IS NOT NULL
   AND ps.day_master IS NOT NULL
 ORDER BY dsr.created_at
