@@ -13,7 +13,7 @@
 
 terraform {
   backend "s3" {
-    bucket         = "sajuhomerun-tfstate-changeme" # bootstrap 출력 state_bucket_name 으로 교체
+    bucket         = "sajuhomerun-tfstate-version1" # bootstrap 출력 state_bucket_name 으로 교체
     key            = "infra/terraform.tfstate"
     region         = "ap-northeast-2"
     dynamodb_table = "sajuhomerun-tflock" # bootstrap 출력 lock_table_name 으로 교체

@@ -139,7 +139,7 @@ resource "aws_lambda_function" "game_crawler" {
 
   timeout       = 120
   memory_size   = 1024
-  architectures = ["x86_64"]
+  architectures = ["arm64"]
 
   vpc_config {
     subnet_ids         = local.vpc_config.subnet_ids

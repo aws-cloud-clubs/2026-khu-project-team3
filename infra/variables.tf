@@ -135,7 +135,7 @@ variable "db_allocated_storage" {
 variable "db_engine_version" {
   description = "PostgreSQL 엔진 버전"
   type        = string
-  default     = "16.4"
+  default     = "16.6"
 }
 
 ###############################################################################
