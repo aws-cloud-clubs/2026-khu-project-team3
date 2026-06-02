@@ -145,6 +145,7 @@ def _upsert_games(cur, schedules: Sequence[GameSchedule], team_id_by_name: dict[
             (
                 schedule.game_date,
                 schedule.game_time,
+                schedule.stadium,
                 team_id_by_name[schedule.home_team],
                 team_id_by_name[schedule.away_team],
             ),

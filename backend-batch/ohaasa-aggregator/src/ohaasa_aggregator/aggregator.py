@@ -33,5 +33,5 @@ def _upsert_zodiac_fortune_rankings(cur, fortune_date: str, ohaasa_info: Sequenc
     for item in ohaasa_info:
         cur.execute(
             UPSERT_ZODIAC_FORTUNE_RANKING_QUERY,
-            (parsed_fortune_date, item["constellation"], item["rank"]),
+            (parsed_fortune_date, item["constellation"], item["rank"], item["fortune_text"]),
         )

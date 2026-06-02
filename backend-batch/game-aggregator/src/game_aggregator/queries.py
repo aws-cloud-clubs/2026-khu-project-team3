@@ -8,10 +8,12 @@ WHERE name = %s
 """
 
 UPSERT_GAME_QUERY = """
-INSERT INTO games (game_date, game_time, home_team_id, away_team_id)
-VALUES (%s, %s, %s, %s)
+INSERT INTO games (game_date, game_time, stadium, home_team_id, away_team_id)
+VALUES (%s, %s, %s, %s, %s)
 ON CONFLICT (game_date, home_team_id, away_team_id)
-DO UPDATE SET game_time = EXCLUDED.game_time
+DO UPDATE SET
+    game_time = EXCLUDED.game_time,
+    stadium = EXCLUDED.stadium
 """
 
 GET_PLAYERS_FOR_SCHEDULED_TEAMS_QUERY = """

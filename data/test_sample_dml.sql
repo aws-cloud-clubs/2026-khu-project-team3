@@ -64,13 +64,14 @@ ON CONFLICT (player_id) DO UPDATE SET
   day_master = EXCLUDED.day_master,
   five_elements = EXCLUDED.five_elements;
 
-INSERT INTO games (game_date, game_time, home_team_id, away_team_id)
-SELECT DATE '2026-06-02', TIME '18:30', home_team.id, away_team.id
+INSERT INTO games (game_date, game_time, stadium, home_team_id, away_team_id)
+SELECT DATE '2026-06-02', TIME '18:30', '테스트 구장', home_team.id, away_team.id
 FROM teams home_team
 JOIN teams away_team ON away_team.name = '테스트 원정'
 WHERE home_team.name = '테스트 홈'
 ON CONFLICT (game_date, home_team_id, away_team_id) DO UPDATE SET
-  game_time = EXCLUDED.game_time;
+  game_time = EXCLUDED.game_time,
+  stadium = EXCLUDED.stadium;
 
 INSERT INTO daily_saju_report (
   player_id,
@@ -169,22 +170,23 @@ ON CONFLICT (player_id, game_date) DO UPDATE SET
   generated_at = EXCLUDED.generated_at,
   updated_at = now();
 
-INSERT INTO zodiac_fortune_rankings (zodiac_sign, fortune_date, rank) VALUES
-  ('ARIES', DATE '2026-06-02', 1),
-  ('TAURUS', DATE '2026-06-02', 2),
-  ('GEMINI', DATE '2026-06-02', 3),
-  ('CANCER', DATE '2026-06-02', 4),
-  ('LEO', DATE '2026-06-02', 5),
-  ('VIRGO', DATE '2026-06-02', 6),
-  ('LIBRA', DATE '2026-06-02', 7),
-  ('SCORPIO', DATE '2026-06-02', 8),
-  ('SAGITTARIUS', DATE '2026-06-02', 9),
-  ('CAPRICORN', DATE '2026-06-02', 10),
-  ('AQUARIUS', DATE '2026-06-02', 11),
-  ('PISCES', DATE '2026-06-02', 12)
+INSERT INTO zodiac_fortune_rankings (zodiac_sign, fortune_date, rank, fortune_text) VALUES
+  ('ARIES', DATE '2026-06-02', 1, '테스트 양자리 운세입니다.'),
+  ('TAURUS', DATE '2026-06-02', 2, '테스트 황소자리 운세입니다.'),
+  ('GEMINI', DATE '2026-06-02', 3, '테스트 쌍둥이자리 운세입니다.'),
+  ('CANCER', DATE '2026-06-02', 4, '테스트 게자리 운세입니다.'),
+  ('LEO', DATE '2026-06-02', 5, '테스트 사자자리 운세입니다.'),
+  ('VIRGO', DATE '2026-06-02', 6, '테스트 처녀자리 운세입니다.'),
+  ('LIBRA', DATE '2026-06-02', 7, '테스트 천칭자리 운세입니다.'),
+  ('SCORPIO', DATE '2026-06-02', 8, '테스트 전갈자리 운세입니다.'),
+  ('SAGITTARIUS', DATE '2026-06-02', 9, '테스트 사수자리 운세입니다.'),
+  ('CAPRICORN', DATE '2026-06-02', 10, '테스트 염소자리 운세입니다.'),
+  ('AQUARIUS', DATE '2026-06-02', 11, '테스트 물병자리 운세입니다.'),
+  ('PISCES', DATE '2026-06-02', 12, '테스트 물고기자리 운세입니다.')
 ON CONFLICT (zodiac_sign) DO UPDATE SET
   fortune_date = EXCLUDED.fortune_date,
   rank = EXCLUDED.rank,
+  fortune_text = EXCLUDED.fortune_text,
   updated_at = now();
 
 COMMIT;

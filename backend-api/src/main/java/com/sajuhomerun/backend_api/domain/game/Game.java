@@ -30,9 +30,11 @@ public class Game {
     private LocalDate gameDate;
     @Column(name = "game_time")
     private LocalTime gameTime;
+    @Column(name = "stadium")
+    private String stadium;
 
-    @ManyToOne @JoinColumn(name = "home_team_id", nullable = false)
+    @ManyToOne(fetch = FetchType.LAZY) @JoinColumn(name = "home_team_id", nullable = false)
     private Team homeTeam;
-    @ManyToOne @JoinColumn(name = "away_team_id", nullable = false)
+    @ManyToOne(fetch = FetchType.LAZY) @JoinColumn(name = "away_team_id", nullable = false)
     private Team awayTeam;
 }
