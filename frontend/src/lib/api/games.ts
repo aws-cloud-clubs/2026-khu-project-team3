@@ -8,19 +8,15 @@ interface ApiTeam {
   id: number
   name: string
   logo_url?: string
+  lucky_index?: number
 }
-interface ApiHomeGame {
+interface ApiTodayGame {
   game_id: number
   game_date: string
   game_time: string
   stadium: string
   home_team: ApiTeam
   away_team: ApiTeam
-}
-interface HomeData {
-  today_games: ApiHomeGame[]
-  team_luck_rankings: { rank: number; team: ApiTeam; luck_score: number }[]
-  kbo_rankings: { rank: number; team: ApiTeam }[]
 }
 
 function findTeamByName(apiName: string): Team | null {
@@ -40,11 +36,25 @@ function toStatus(gameDate: string): Pick<Game, 'status' | 'statusLabel'> {
     : { status: 'scheduled', statusLabel: '예정' }
 }
 
-async function fetchHomeData(): Promise<HomeData | null> {
+async function fetchTodayGames(): Promise<{ today_games: ApiTodayGame[] } | null> {
   try {
-    const res = await fetch(`${BASE_URL}/api/home`, { next: { revalidate: 60 } })
+    const res = await fetch(`${BASE_URL}/api/v1/saju/games/today`, {
+      next: { revalidate: 60 },
+    })
     if (!res.ok) return null
-    return res.json() as Promise<HomeData>
+    return res.json()
+  } catch {
+    return null
+  }
+}
+
+async function fetchRanking(): Promise<{ kbo_rankings: { rank: number; team: ApiTeam }[] } | null> {
+  try {
+    const res = await fetch(`${BASE_URL}/api/v1/saju/teams/ranking`, {
+      next: { revalidate: 60 },
+    })
+    if (!res.ok) return null
+    return res.json()
   } catch {
     return null
   }
@@ -53,12 +63,8 @@ async function fetchHomeData(): Promise<HomeData | null> {
 export async function getGames(): Promise<Game[]> {
   if (!BASE_URL) return mockGames
 
-  const data = await fetchHomeData()
+  const data = await fetchTodayGames()
   if (!data) return []
-
-  const luckMap = new Map(
-    (data.team_luck_rankings ?? []).map((r) => [r.team.name, r.luck_score])
-  )
 
   const games: Game[] = []
   for (const g of data.today_games ?? []) {
@@ -73,8 +79,8 @@ export async function getGames(): Promise<Game[]> {
       time: g.game_time,
       stadium: g.stadium,
       date: g.game_date,
-      home: { ...home, fortuneScore: luckMap.get(g.home_team.name) },
-      away: { ...away, fortuneScore: luckMap.get(g.away_team.name) },
+      home: { ...home, fortuneScore: g.home_team.lucky_index },
+      away: { ...away, fortuneScore: g.away_team.lucky_index },
     })
   }
   return games
@@ -103,8 +109,8 @@ export async function getGameById(id: string): Promise<Game | null> {
       time: data.game.game_time,
       stadium: data.game.stadium,
       date: data.game.game_date,
-      home: { ...home, fortuneScore: data.home_team.luck_score },
-      away: { ...away, fortuneScore: data.away_team.luck_score },
+      home: { ...home, fortuneScore: data.home_team.lucky_index },
+      away: { ...away, fortuneScore: data.away_team.lucky_index },
     }
   } catch {
     return null
@@ -114,7 +120,7 @@ export async function getGameById(id: string): Promise<Game | null> {
 export async function getRanking(): Promise<RankingRow[]> {
   if (!BASE_URL) return mockRanking
 
-  const data = await fetchHomeData()
+  const data = await fetchRanking()
   if (!data) return []
 
   return (data.kbo_rankings ?? []).map((entry) => {
@@ -129,7 +135,6 @@ export async function getRanking(): Promise<RankingRow[]> {
     return {
       rank: entry.rank,
       team,
-      // TODO: API does not provide wins/losses/draws/winRate
       wins: 0,
       losses: 0,
       draws: 0,

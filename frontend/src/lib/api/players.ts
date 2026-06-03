@@ -4,6 +4,13 @@ import { TEAMS } from '@/lib/constants/teams'
 import { mockPlayers, mockLineups } from '@/lib/data/mockData'
 
 const BASE_URL = process.env.API_BASE_URL
+const IMAGE_BASE_URL = process.env.IMAGE_BASE_URL ?? 'https://d2gi9i8g5kw08c.cloudfront.net/'
+
+function buildImageUrl(path: string | null | undefined): string | undefined {
+  if (!path) return undefined
+  const base = IMAGE_BASE_URL.endsWith('/') ? IMAGE_BASE_URL : IMAGE_BASE_URL + '/'
+  return encodeURI(base + path)
+}
 
 interface ApiPlayer {
   id: number
@@ -36,7 +43,7 @@ function mapPlayer(raw: ApiPlayer, teamId: string, teamFullName: string): Player
     teamId,
     teamFullName,
     positions: [raw.position as Position],
-    imageUrl: raw.profile_image_url ?? undefined,
+    imageUrl: buildImageUrl(raw.profile_image_url),
     initials: getInitials(raw.name),
   }
 }
@@ -91,7 +98,7 @@ export async function getPlayerById(id: string): Promise<Player | null> {
   if (!BASE_URL) return mockPlayers[id] ?? null
 
   try {
-    const res = await fetch(`${BASE_URL}/api/v1/saju/players/${id}`)
+    const res = await fetch(`${BASE_URL}/api/v1/saju/players/${id}`, { cache: 'no-store' })
     if (!res.ok) return null
     const data = await res.json()
 
@@ -106,7 +113,7 @@ export async function getPlayerById(id: string): Promise<Player | null> {
       teamId,
       teamFullName,
       positions: [p.position as Position],
-      imageUrl: p.profile_image_url ?? undefined,
+      imageUrl: buildImageUrl(p.profile_image_url),
       initials: getInitials(p.name),
     }
   } catch {
