@@ -23,6 +23,7 @@ resource "aws_security_group" "alb" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
+
   egress {
     description = "All outbound"
     from_port   = 0
@@ -50,6 +51,14 @@ resource "aws_security_group" "backend" {
     to_port         = var.backend_port
     protocol        = "tcp"
     security_groups = [aws_security_group.alb.id]
+  }
+
+  ingress {
+    description = "Allow all traffic from VPC"
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = [var.vpc_cidr] # 10.0.0.0/16 대역 허용
   }
 
   egress {

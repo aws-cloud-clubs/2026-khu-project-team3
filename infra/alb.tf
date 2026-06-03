@@ -25,7 +25,7 @@ resource "aws_lb_target_group" "backend" {
 
   health_check {
     enabled             = true
-    path                = var.health_check_path
+    path                = "/api/v1/saju/games/today"
     protocol            = "HTTP"
     matcher             = "200-399"
     interval            = 30

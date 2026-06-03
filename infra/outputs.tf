@@ -22,6 +22,11 @@ output "ecr_repository_url" {
   value       = aws_ecr_repository.game_crawler.repository_url
 }
 
+output "backend_ecr_repository_url" {
+  description = "Spring Boot 백엔드 ECR 레포지토리 URL"
+  value       = aws_ecr_repository.backend.repository_url
+}
+
 output "sqs_queue_url" {
   description = "메인 SQS 큐 URL (Lambda SQS_QUEUE_URL 환경변수 값)"
   value       = aws_sqs_queue.main.id

@@ -99,7 +99,7 @@ variable "health_check_path" {
 }
 
 variable "backend_image_uri" {
-  description = "백엔드 EC2 가 실행할 Spring Boot Docker 이미지 URI (ECR 등). 비우면 user_data 에서 실행 생략"
+  description = "백엔드 EC2 가 실행할 Spring Boot Docker 이미지 URI. 예: <account>.dkr.ecr.ap-northeast-2.amazonaws.com/sh-backend-api:latest. 비우면 user_data 에서 실행 생략"
   type        = string
   default     = ""
 }
