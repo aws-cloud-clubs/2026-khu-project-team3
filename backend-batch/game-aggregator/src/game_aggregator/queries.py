@@ -8,10 +8,21 @@ WHERE name = %s
 """
 
 UPSERT_GAME_QUERY = """
-INSERT INTO games (game_date, game_time, home_team_id, away_team_id)
-VALUES (%s, %s, %s, %s)
+INSERT INTO games (game_date, game_time, stadium, home_team_id, away_team_id)
+VALUES (%s, %s, %s, %s, %s)
 ON CONFLICT (game_date, home_team_id, away_team_id)
-DO UPDATE SET game_time = EXCLUDED.game_time
+DO UPDATE SET
+    game_time = EXCLUDED.game_time,
+    stadium = EXCLUDED.stadium
+"""
+
+UPSERT_SERVICE_TODAY_QUERY = """
+INSERT INTO app_settings (setting_key, setting_value)
+VALUES ('service_today', %s)
+ON CONFLICT (setting_key)
+DO UPDATE SET
+    setting_value = EXCLUDED.setting_value,
+    updated_at = now()
 """
 
 GET_PLAYERS_FOR_SCHEDULED_TEAMS_QUERY = """

@@ -1,29 +1,67 @@
-# Backend Batch 
+# Backend Batch
 
-aws lambda에서 처리할 경기 정보 수집 및 사주 생성 함수입니다. 
+AWS Lambda에서 처리할 경기 정보 수집, 오늘의 사주 생성, 선수별 리포트 생성을 담당하는 배치 프로젝트입니다.
+
+현재는 공통 모듈과 Lambda별 패키지를 분리해서 관리합니다.
 
 ```text
 .
-├── Dockerfile <- aggregator lambda용 Dockerfile
+├── .dockerignore
+├── .env.example
 ├── README.md
-├── hello.py
-├── pyproject.toml
-├── src
-│   ├── __init__.py
-│   ├── aggregator.py <- 경기일 정보 조회 및 메시지 발행 담당 함수
-│   ├── crawler.py <- playwright 크롤링 함수
-│   ├── db.py <- db 연결
-│   ├── handlers
-│   │   ├── __init__.py
-│   │   ├── aggregator_handler.py <- 경기일 정보 크롤링 및 메시지 발행 담당 함수 lambda 진입점
-│   │   └── worker_handler.py  <- worker 함수 lambda 진입점
-│   ├── saju.py   <- 선수, 경기일 만세력 조회
-│   ├── schema.py <- pydantic schema
-│   ├── sqs.py <- aws sqs 메시지 전송 함수
-│   └── worker.py <- 해당 경기일에 각 선수에 대해 사주 생성하는 함수
-├── tests
-│   ├── conftest.py
-│   └── test_saju.py <- 만세력 함수 테스트
-└── uv.lock
+├── common
+│   ├── pyproject.toml
+│   └── src
+│       └── common
+│           ├── __init__.py
+│           ├── db.py       <- DB 연결
+│           ├── saju.py     <- 선수, 경기일 만세력 조회
+│           └── schema.py   <- 공통 Pydantic 스키마
+├── game-aggregator
+│   ├── Dockerfile
+│   ├── pyproject.toml
+│   └── src
+│       └── game_aggregator
+│           ├── __init__.py
+│           ├── aggregator.py
+│           ├── crawler.py
+│           ├── handlers
+│           │   ├── __init__.py
+│           │   └── aggregator_handler.py <- 경기 정보 수집 Lambda 진입점
+│           ├── queries.py
+│           └── sqs.py      <- Worker용 SQS 메시지 발행
+├── ohaasa-aggregator
+│   ├── pyproject.toml
+│   ├── scripts
+│   │   └── build_lambda_zip.sh
+│   ├── src
+│   │   └── ohaasa_aggregator
+│   │       ├── __init__.py
+│   │       ├── aggregator.py
+│   │       ├── crawler.py
+│   │       ├── handlers
+│   │       │   ├── __init__.py
+│   │       │   └── aggregator_handler.py <- 오늘의 사주 생성 Lambda 진입점
+│   │       ├── llm.py
+│   │       └── queries.py
+│   └── uv.lock
+└── worker
+    ├── pyproject.toml
+    ├── scripts
+    │   └── build_lambda_zip.sh
+    ├── src
+    │   └── worker
+    │       ├── __init__.py
+    │       ├── handlers
+    │       │   ├── __init__.py
+    │       │   └── worker_handler.py <- SQS 배치 처리 Lambda 진입점
+    │       ├── llm.py
+    │       ├── prompts.py
+    │       ├── queries.py
+    │       └── worker.py   <- 선수별 사주 리포트 생성
+    └── uv.lock
 ```
+
+빌드 결과물과 로컬 실행 환경인 `.venv`, `.lambda_build`, `dist`, `__pycache__`는 구조도에서 제외했습니다.
+
 ![alt text](../assets/image.png)

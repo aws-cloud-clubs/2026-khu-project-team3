@@ -1,6 +1,7 @@
 package com.sajuhomerun.backend_api.domain.player;
 
 import com.sajuhomerun.backend_api.domain.team.Team;
+import com.sajuhomerun.backend_api.domain.zodiac.ZodiacSign;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -19,6 +20,9 @@ public class Player {
 
     @Column(nullable = false)
     private String name;
+
+    @Column(name = "profile_image_path")
+    private String profileImagePath;
 
     private String position;
 
@@ -41,4 +45,6 @@ public class Player {
     @ManyToOne
     @JoinColumn(name = "team_id", nullable = false)
     private Team team;
+
+
 }

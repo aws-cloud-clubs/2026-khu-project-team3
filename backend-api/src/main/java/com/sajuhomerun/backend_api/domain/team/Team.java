@@ -22,6 +22,9 @@ public class Team {
     @Column(nullable = false, unique = true)
     private String name;
 
+    @Column(name = "logo_image_path")
+    private String logoImagePath;
+
     @Column(nullable = true)
     private Integer ranking;
 

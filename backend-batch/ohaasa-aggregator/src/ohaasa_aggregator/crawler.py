@@ -43,7 +43,7 @@ def get_ohaasa_info() -> list[dict]:
             {
                 "rank": int(detail["ranking_no"]),
                 "constellation": CONSTELLATION_MAP.get(detail["horoscope_st"], ""),
-                "message": " ".join(
+                "fortune_text": " ".join(
                     part.strip()
                     for part in detail.get("horoscope_text", "").split("\t")
                     if part.strip()

@@ -1,4 +1,4 @@
-package com.sajuhomerun.backend_api.domain.player;
+package com.sajuhomerun.backend_api.domain.zodiac;
 
 import jakarta.persistence.*;
 import lombok.AccessLevel;
@@ -22,4 +22,7 @@ public class ZodiacFortuneRanking {
 
     @Column(nullable = false)
     private Integer rank;
+
+    @Column(name = "fortune_text", nullable = false)
+    private String fortuneText;
 }

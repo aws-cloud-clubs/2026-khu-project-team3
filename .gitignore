@@ -1,5 +1,6 @@
 */.env
 data/kbo*
+data/images/
 .DS_Store
 *.pyc
 __pycache__/

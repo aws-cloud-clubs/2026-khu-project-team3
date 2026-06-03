@@ -1,4 +1,4 @@
-package com.sajuhomerun.backend_api.domain.player;
+package com.sajuhomerun.backend_api.domain.zodiac;
 
 public enum ZodiacSign {
 
