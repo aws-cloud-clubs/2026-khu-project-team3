@@ -6,6 +6,7 @@ data/images/
 __pycache__/
 venv/
 **/.lambda_build
+*.zip
 
 # Terraform
 **/.terraform/
