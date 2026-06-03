@@ -11,6 +11,7 @@ export interface FortuneCardData {
   element?: OhaengElement
   tags?: string[]
   description: string
+  referenceDate?: string
 }
 
 export interface Fortune {
