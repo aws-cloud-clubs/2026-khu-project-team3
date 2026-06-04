@@ -20,13 +20,16 @@ export default function RankRow({ row, isLast }: RankRowProps) {
       className={`grid gap-5 items-center py-[12px] ${
         isLast ? 'border-b-0 pb-1' : 'border-b border-[rgba(168,208,190,0.15)]'
       }`}
-      style={{ gridTemplateColumns: '40px minmax(0,1fr)' }}
+      style={{ gridTemplateColumns: '36px minmax(0,1fr)' }}
     >
-      <span className={`text-[17px] text-center ${rankClass}`}>{row.rank}</span>
+      <span className={`text-[16px] text-center ${rankClass}`}>{row.rank}</span>
 
-      <div className="flex items-center gap-4 min-w-0">
+      <div
+        className="grid items-center min-w-0"
+        style={{ gridTemplateColumns: '32px minmax(0,1fr)', columnGap: '14px' }}
+      >
         <div
-          className="w-10 h-10 rounded-full flex items-center justify-center text-[12px] font-[800] text-white flex-shrink-0"
+          className="w-8 h-8 rounded-full flex items-center justify-center text-[11px] font-[800] text-white"
           style={{ background: `linear-gradient(135deg, ${row.team.gradient[0]}, ${row.team.gradient[1]})` }}
           aria-hidden
         >
@@ -34,15 +37,15 @@ export default function RankRow({ row, isLast }: RankRowProps) {
             <Image
               src={row.team.logoUrl}
               alt=""
-              width={40}
-              height={40}
-              className="w-8 h-8 object-contain"
+              width={32}
+              height={32}
+              className="w-6 h-6 object-contain"
             />
           ) : (
             row.team.abbr
           )}
         </div>
-        <span className="text-[16px] font-[800] text-text-700 truncate">{row.team.name}</span>
+        <span className="text-[14px] font-[800] text-text-700 truncate">{row.team.name}</span>
       </div>
     </div>
   )

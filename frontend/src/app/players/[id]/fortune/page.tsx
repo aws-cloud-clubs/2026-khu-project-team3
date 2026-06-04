@@ -31,7 +31,7 @@ export default async function FortunePage({ params }: Props) {
     <>
       <AppHeader showBack showShare shareIcon="ios_share" />
       <main className="max-w-container mx-auto px-5 pt-[18px] pb-[130px] flex flex-col gap-4">
-        <PlayerHero player={player} summary={fortune.summary} />
+        <PlayerHero player={player} />
         {fortune.cards.map((card, i) => (
           <FortuneCard key={i} card={card} />
         ))}

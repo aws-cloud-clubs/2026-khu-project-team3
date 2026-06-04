@@ -34,11 +34,14 @@ export default function FortuneCard({ card }: FortuneCardProps) {
         </h2>
       </div>
 
-      {/* 별자리 운세 */}
-      {isHoroscope && (
+      {/* 운세 설명 */}
+      {card.description && (
         <div
           className="p-[14px] rounded-[14px] mb-[10px]"
-          style={{ background: '#f0fdf5', border: '1px solid #dcfce8' }}
+          style={{
+            background: isHoroscope ? '#f0fdf5' : '#fff7ed',
+            border: `1px solid ${isHoroscope ? '#dcfce8' : '#fed7aa'}`,
+          }}
         >
           <p className="text-[13px] leading-[1.65] text-text-500 m-0">{card.description}</p>
         </div>

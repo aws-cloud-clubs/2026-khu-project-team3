@@ -16,10 +16,16 @@ export default function RankingTable({ rows }: RankingTableProps) {
       {/* 헤더 */}
       <div
         className="grid gap-5 pb-[9px] border-b border-[rgba(168,208,190,0.3)] mb-[2px]"
-        style={{ gridTemplateColumns: '40px minmax(0,1fr)' }}
+        style={{ gridTemplateColumns: '36px minmax(0,1fr)' }}
       >
         <span className="text-[11px] font-[600] text-text-300 text-center">순위</span>
-        <span className="text-[11px] font-[600] text-text-300">팀</span>
+        <span
+          className="grid text-[11px] font-[600] text-text-300"
+          style={{ gridTemplateColumns: '32px minmax(0,1fr)', columnGap: '14px' }}
+        >
+          <span />
+          <span>팀</span>
+        </span>
       </div>
 
       {rows.map((row, i) => (

@@ -3,10 +3,9 @@ import type { Player } from '@/types/player'
 
 interface PlayerHeroProps {
   player: Player
-  summary: string
 }
 
-export default function PlayerHero({ player, summary }: PlayerHeroProps) {
+export default function PlayerHero({ player }: PlayerHeroProps) {
   return (
     <section
       className="player-hero rounded-[28px] text-white relative"
@@ -25,7 +24,7 @@ export default function PlayerHero({ player, summary }: PlayerHeroProps) {
       />
 
       {/* 프로필 */}
-      <div className="flex items-center gap-5 relative z-10 mb-5">
+      <div className="flex items-center gap-5 relative z-10">
         <div
           className="w-[100px] h-[100px] rounded-full overflow-hidden flex-shrink-0"
           style={{ border: '3px solid rgba(255,255,255,0.6)' }}
@@ -69,17 +68,6 @@ export default function PlayerHero({ player, summary }: PlayerHeroProps) {
         </div>
       </div>
 
-      {/* 한 줄 운세 요약 */}
-      <div
-        className="relative z-10 rounded-[16px] px-4 py-[14px]"
-        style={{
-          background: 'rgba(255,255,255,0.14)',
-          backdropFilter: 'blur(10px)',
-          border: '1px solid rgba(255,255,255,0.22)',
-        }}
-      >
-        <p className="text-[13px] leading-[1.65] m-0 opacity-95">{summary}</p>
-      </div>
     </section>
   )
 }
