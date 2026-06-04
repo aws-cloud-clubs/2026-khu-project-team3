@@ -10,7 +10,7 @@ export default function FortuneCard({ card }: FortuneCardProps) {
   return (
     <section className="bg-card rounded-[20px] shadow-card p-5">
       {/* 헤더 */}
-      <div className="mb-[14px]">
+      <div className="mb-[14px] pl-1">
         <h2 className="text-[19px] font-[800] text-text-700 tracking-[-0.02em] leading-[1.25] m-0">
           {isHoroscope ? card.title : `${card.title}${card.score != null ? ` ${card.score}점` : ''}`}
         </h2>

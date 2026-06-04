@@ -8,7 +8,8 @@ interface GameCardProps {
 }
 
 export default function GameCard({ game }: GameCardProps) {
-  const badgeVariant = game.status === 'today' ? 'today' : 'scheduled'
+  const relativeStatusLabel = formatRelativeStatusLabel(game.date, game.statusLabel)
+  const badgeVariant = relativeStatusLabel === '오늘' ? 'today' : 'scheduled'
   const gameDate = formatGameDate(game.date)
   const gameTime = formatGameTime(game.time)
   const stadiumMeta = game.stadium
@@ -19,9 +20,9 @@ export default function GameCard({ game }: GameCardProps) {
       className="block w-full flex-shrink-0 px-2 pt-1 pb-3 cursor-pointer active:opacity-70"
       style={{ scrollSnapAlign: 'start' }}
     >
-      <div className="flex justify-between items-center mb-[18px]">
-        <div className="flex items-center gap-[10px]">
-          <Badge variant={badgeVariant}>{game.statusLabel}</Badge>
+      <div className="relative flex justify-center items-center mb-[18px]">
+        <div className="flex items-center justify-center gap-[10px]">
+          <Badge variant={badgeVariant}>{relativeStatusLabel}</Badge>
           {gameDate && (
             <span className="text-[11px] font-[700] text-text-300">{gameDate}</span>
           )}
@@ -29,7 +30,9 @@ export default function GameCard({ game }: GameCardProps) {
             <span className="text-[11px] text-text-300">{gameTime}</span>
           )}
         </div>
-        {stadiumMeta && <span className="text-[11px] text-text-300">{stadiumMeta}</span>}
+        {stadiumMeta && (
+          <span className="absolute right-0 text-[11px] text-text-300">{stadiumMeta}</span>
+        )}
       </div>
       <div className="flex items-center justify-between">
         <TeamInfo name={game.home.name} logoUrl={game.home.logoUrl} emoji={game.home.emoji} gradient={game.home.gradient} />
@@ -40,6 +43,34 @@ export default function GameCard({ game }: GameCardProps) {
   )
 }
 
+function formatRelativeStatusLabel(date: string | undefined, fallback: string): string {
+  const gameDay = parseLocalDate(date)
+  if (!gameDay) return fallback
+
+  const now = new Date()
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+  const diffDays = Math.floor((today.getTime() - gameDay.getTime()) / 86_400_000)
+
+  if (diffDays === 0) return '오늘'
+  if (diffDays === 1) return '어제'
+  if (diffDays > 1) return `${diffDays}일 전`
+  return fallback
+}
+
+function parseLocalDate(date: string | undefined): Date | null {
+  if (!date) return null
+
+  const match = date.match(/^(\d{4})[.-](\d{1,2})[.-](\d{1,2})/)
+  if (!match) return null
+
+  const year = Number(match[1])
+  const month = Number(match[2])
+  const day = Number(match[3])
+  if (!year || !month || !day) return null
+
+  return new Date(year, month - 1, day)
+}
+
 function formatGameTime(time: string | undefined): string | null {
   if (!time) return null
   return time.length >= 5 ? time.slice(0, 5) : time
@@ -47,9 +78,8 @@ function formatGameTime(time: string | undefined): string | null {
 
 function formatGameDate(date: string | undefined): string | null {
   if (!date) return null
-  const normalized = date.replaceAll('.', '-')
-  const parsed = new Date(normalized)
-  if (Number.isNaN(parsed.getTime())) return date
+  const parsed = parseLocalDate(date)
+  if (!parsed) return date
 
   const year = parsed.getFullYear()
   const month = String(parsed.getMonth() + 1).padStart(2, '0')

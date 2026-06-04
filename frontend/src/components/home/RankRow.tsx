@@ -25,8 +25,8 @@ export default function RankRow({ row, isLast }: RankRowProps) {
       <span className={`text-[16px] text-center ${rankClass}`}>{row.rank}</span>
 
       <div
-        className="grid items-center min-w-0"
-        style={{ gridTemplateColumns: '32px minmax(0,1fr)', columnGap: '14px' }}
+        className="grid items-center justify-center min-w-0"
+        style={{ gridTemplateColumns: '32px max-content', columnGap: '14px' }}
       >
         <div
           className="w-8 h-8 rounded-full flex items-center justify-center text-[11px] font-[800] text-white"
