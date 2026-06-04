@@ -80,6 +80,7 @@ def aggregate() -> None:
         payload = SQSMessage(
             player_id=player.player_id,
             game_date=game_saju.game_date,
+            position=player.position,
             ten_god_result=ten_god_result,
         )
 
@@ -165,7 +166,7 @@ def _get_players_for_scheduled_teams(cur, team_ids) -> list[PlayerGameSaju]:
     )
 
     players = []
-    for player_id, name, birth_date, birth_time, day_master in cur.fetchall():
+    for player_id, name, position, birth_date, birth_time, day_master in cur.fetchall():
         if day_master is None:
             player_saju = get_player_saju_info(
                 name=name,
@@ -189,7 +190,7 @@ def _get_players_for_scheduled_teams(cur, team_ids) -> list[PlayerGameSaju]:
             )
             day_master = player_saju.day_master
 
-        players.append(PlayerGameSaju(player_id=player_id, name=name, day_master=day_master))
+        players.append(PlayerGameSaju(player_id=player_id, name=name, position=position, day_master=day_master))
 
     return players
 

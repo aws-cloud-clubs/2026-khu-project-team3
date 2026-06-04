@@ -16,12 +16,16 @@ def create_llm_client() -> AsyncOpenAI:
     )
 
 
-def _build_prompt(input_data: TenGodResult) -> dict:
+def _build_prompt(input_data: TenGodResult, position: str | None = None) -> dict:
+    prompt_input = input_data.model_dump()
+    if position:
+        prompt_input["position"] = position
+
     return {
         "role": "user",
         "content": PROMPT.replace(
             "[입력 데이터]\n{}",
-            f"[입력 데이터]\n{input_data.model_dump_json()}",
+            f"[입력 데이터]\n{json.dumps(prompt_input, ensure_ascii=False)}",
         ),
     }
 
@@ -138,9 +142,9 @@ def _validate_result(output: dict) -> ValidationResult:
 
 
 
-async def generate_saju_info(ten_god_result: TenGodResult, client: AsyncOpenAI) -> LLMOutput:
+async def generate_saju_info(ten_god_result: TenGodResult, client: AsyncOpenAI, position: str | None = None) -> LLMOutput:
     model = os.environ["UPSTAGE_MODEL"]
-    messages = [_build_prompt(ten_god_result)]
+    messages = [_build_prompt(ten_god_result, position)]
     schema = LLMOutput.model_json_schema()
     schema["additionalProperties"] = False
     schema["properties"]["lucky_index"].update({"minimum": 0, "maximum": 100})

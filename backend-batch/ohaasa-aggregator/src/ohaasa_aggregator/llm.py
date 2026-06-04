@@ -42,7 +42,8 @@ class OhaasaFortuneOutput(BaseModel):
 * 팬이 읽는 야구 관련 일상 운세처럼 작성합니다.
 * 원문 운세의 긍정/부정 분위기와 강도를 유지하되, 직역하지 않습니다.
 * rank가 높을수록 좋은 경기 흐름, 낮을수록 변수와 아쉬운 흐름을 자연스럽게 반영합니다.
-* 타격감, 수비 집중력, 마운드 흐름, 타선 분위기, 승부처, 응원 흐름 같은 야구 표현을 자연스럽게 사용합니다.
+* 경기 분위기, 승부처, 응원 흐름 같은 야구 표현을 자연스럽게 사용합니다.
+* 특정 포지션이나 특정 역할의 선수에게만 해당하는 표현을 사용하지 않습니다.
 * 선수 한 명에게 직접 말하지 않습니다.
 * 조언형 명령문을 쓰지 않습니다.
 * "주의해야 합니다", "조심해야 합니다", "노력이 필요합니다" 같은 표현을 사용하지 않습니다.
@@ -52,7 +53,7 @@ class OhaasaFortuneOutput(BaseModel):
 [출력 예시]
 
 {
-  "fortune_text": "오늘은 타선의 연결감이 살아나며 경기 분위기가 부드럽게 이어질 가능성이 있습니다. 승부처에서도 응원 흐름이 힘을 보태 전체적으로 기분 좋은 야구 운세가 기대됩니다."
+  "fortune_text": "오늘은 경기 분위기가 부드럽게 이어지며 흐름을 잡기 좋은 운세입니다. 승부처에서도 응원 흐름이 힘을 보태 전체적으로 기분 좋은 야구 운세가 기대됩니다."
 }
 """
 
@@ -87,6 +88,7 @@ def _build_prompt(input_data: OhaasaFortuneInput) -> dict:
 class ErrorCode(str, Enum):
     INVALID_SCHEMA = "INVALID_SCHEMA"
     INVALID_TEXT = "INVALID_TEXT"
+    CONTAIN_POSITION_CONTEXT = "CONTAIN_POSITION_CONTEXT"
     MISSING_BASEBALL_CONTEXT = "MISSING_BASEBALL_CONTEXT"
 
 
@@ -115,16 +117,49 @@ def _validate_text(text: str) -> dict:
     baseball_words = [
         "야구",
         "경기",
-        "타격",
-        "타선",
-        "수비",
-        "마운드",
         "승부처",
         "응원",
         "흐름",
+        "분위기",
+    ]
+    position_words = [
+        "포지션",
+        "투수",
+        "포수",
+        "내야수",
+        "외야수",
+        "내야",
+        "외야",
+        "선발",
+        "불펜",
+        "마무리",
+        "마운드",
+        "등판",
+        "투구",
+        "구위",
+        "제구",
+        "타자",
+        "타석",
+        "타격",
+        "타선",
+        "공격",
+        "수비",
+        "주루",
+        "도루",
+        "포구",
+        "송구",
+        "1루수",
+        "2루수",
+        "3루수",
+        "유격수",
+        "좌익수",
+        "중견수",
+        "우익수",
+        "지명타자",
     ]
 
     found_words = [word for word in stop_words if word in text]
+    found_position_words = [word for word in position_words if word in text]
     japanese_chars = re.findall(r"[\u3040-\u30ff]", text)
     has_korean = bool(re.search(r"[가-힣]", text))
     has_baseball_context = any(word in text for word in baseball_words)
@@ -133,6 +168,7 @@ def _validate_text(text: str) -> dict:
         "valid": not found_words and not japanese_chars and has_korean,
         "has_baseball_context": has_baseball_context,
         "words": found_words,
+        "position_words": found_position_words,
         "japanese_chars": japanese_chars,
         "has_korean": has_korean,
     }
@@ -161,6 +197,15 @@ def _validate_result(output: dict) -> ValidationResult:
             ValidationError(
                 code=ErrorCode.INVALID_TEXT,
                 message="invalid fortune_text",
+                metadata=text_validation,
+            )
+        )
+
+    if text_validation["position_words"]:
+        errors.append(
+            ValidationError(
+                code=ErrorCode.CONTAIN_POSITION_CONTEXT,
+                message="fortune_text must not contain position-specific context",
                 metadata=text_validation,
             )
         )

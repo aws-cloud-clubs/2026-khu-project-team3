@@ -28,6 +28,7 @@ class PlayerSaju(BaseModel):
 class PlayerGameSaju(BaseModel):
     name: str
     player_id: int
+    position: str | None = None
     day_master: str
 
 
@@ -50,6 +51,7 @@ class TenGodResult(BaseModel):
 class SQSMessage(BaseModel):
     player_id: int
     game_date: str
+    position: str | None = None
     ten_god_result: TenGodResult
 
 class LLMOutput(BaseModel):

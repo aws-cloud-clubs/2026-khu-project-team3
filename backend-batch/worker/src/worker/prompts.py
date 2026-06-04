@@ -14,6 +14,7 @@ class TenGodResult(BaseModel):
     relation: str
     ten_god: str
     keywords: list[str]
+    position: str | None = None
 ```
 
 반드시 아래 형태의 JSON만 출력하세요.
@@ -54,6 +55,7 @@ class LLMOutput(BaseModel):
 * "주의해야 합니다", "조심해야 합니다", "노력이 필요합니다" 같은 표현을 사용하지 않습니다.
 * 팬 관점에서 오늘 경기 흐름과 관전 포인트를 설명합니다.
 * 경기 영향력, 집중력, 타격감, 분위기, 승부처 흐름 등을 자연스럽게 설명합니다.
+* position이 제공되면 포지션 특성에 맞는 관전 포인트를 자연스럽게 반영합니다.
 * keywords를 그대로 나열하지 않습니다.
 * keywords의 의미를 자연스러운 문장으로 변환하여 사용합니다.
 * 오늘 경기 흐름에 대한 종합 인사이트를 반드시 포함합니다.

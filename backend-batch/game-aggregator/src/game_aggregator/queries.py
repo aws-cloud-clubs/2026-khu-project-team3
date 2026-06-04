@@ -26,7 +26,7 @@ DO UPDATE SET
 """
 
 GET_PLAYERS_FOR_SCHEDULED_TEAMS_QUERY = """
-SELECT DISTINCT p.id, p.name, p.birth_date, p.birth_time, ps.day_master
+SELECT DISTINCT p.id, p.name, p.position, p.birth_date, p.birth_time, ps.day_master
 FROM players p
 LEFT JOIN player_saju ps ON ps.player_id = p.id
 WHERE p.team_id = ANY(%s)

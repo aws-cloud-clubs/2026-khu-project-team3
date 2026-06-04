@@ -43,7 +43,7 @@ async def work_batch(messages: list[SQSMessage]) -> list[int]:
 
     async with create_llm_client() as client:
         results = await asyncio.gather(
-            *(generate_saju_info(message.ten_god_result, client) for message in messages),
+            *(generate_saju_info(message.ten_god_result, client, message.position) for message in messages),
             return_exceptions=True,
         )
 
@@ -169,9 +169,10 @@ def main() -> None:
         SQSMessage(
             player_id=player_id,
             game_date=game_date.isoformat(),
+            position=position,
             ten_god_result=get_ten_god(day_master, game_day_stem),
         )
-        for player_id, game_date, day_master, game_day_stem in rows
+        for player_id, game_date, position, day_master, game_day_stem in rows
     ]
     asyncio.run(work_batch(messages))
     _log_current_report_rows(messages)

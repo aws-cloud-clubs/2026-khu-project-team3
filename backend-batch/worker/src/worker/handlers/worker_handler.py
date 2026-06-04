@@ -66,10 +66,11 @@ def main() -> None:
         raise ValueError("No pending or failed daily_saju_report row found for worker handler test")
 
     records = []
-    for index, (player_id, game_date, day_master, game_day_stem) in enumerate(rows):
+    for index, (player_id, game_date, position, day_master, game_day_stem) in enumerate(rows):
         message = SQSMessage(
             player_id=player_id,
             game_date=game_date.isoformat(),
+            position=position,
             ten_god_result=get_ten_god(day_master, game_day_stem),
         )
         records.append(

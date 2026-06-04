@@ -33,10 +33,12 @@ GET_WORKER_TEST_MESSAGES_QUERY = """
 SELECT
     dsr.player_id,
     dsr.game_date,
+    p.position,
     ps.day_master,
     dsr.game_day_stem
 FROM daily_saju_report dsr
 JOIN player_saju ps ON ps.player_id = dsr.player_id
+JOIN players p ON p.id = dsr.player_id
 WHERE dsr.status IN ('PENDING', 'FAILED')
   AND dsr.game_day_stem IS NOT NULL
   AND ps.day_master IS NOT NULL
