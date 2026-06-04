@@ -42,9 +42,9 @@ output "nat_instance_public_ip" {
   value       = aws_eip.nat.public_ip
 }
 
-output "backend_instance_id" {
-  description = "백엔드 EC2 인스턴스 ID (SSM Session Manager 접속용)"
-  value       = aws_instance.backend.id
+output "backend_asg_name" {
+  description = "백엔드 Auto Scaling Group 이름"
+  value       = aws_autoscaling_group.backend.name
 }
 
 output "vpc_id" {

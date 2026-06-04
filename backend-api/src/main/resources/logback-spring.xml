@@ -1,19 +1,23 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration>
 
-    <property
-            name="PATTERN"
-            value="%d{HH:mm:ss.SSS} [%-20thread] [%-36X{requestId}] %-5level %-40logger{40} - %msg%n"/>
+    <springProfile name="!prod">
+        <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+            <encoder>
+                <pattern>%d{HH:mm:ss.SSS} [%-20thread] [%-36X{requestId}] %-5level %-40logger{40} - %msg%n</pattern>
+            </encoder>
+        </appender>
+    </springProfile>
 
-    <appender
-            name="CONSOLE"
-            class="ch.qos.logback.core.ConsoleAppender">
-
-        <encoder>
-            <pattern>${PATTERN}</pattern>
-        </encoder>
-
-    </appender>
+    <!-- CloudWatch Logs Insights JSON 포맷 (prod 프로파일) -->
+    <springProfile name="prod">
+        <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+            <encoder class="net.logstash.logback.encoder.LogstashEncoder">
+                <customFields>{"service":"saju-homerun-api"}</customFields>
+                <includeCallerData>false</includeCallerData>
+            </encoder>
+        </appender>
+    </springProfile>
 
     <root level="INFO">
         <appender-ref ref="CONSOLE"/>

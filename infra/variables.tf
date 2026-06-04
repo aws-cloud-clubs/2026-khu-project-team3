@@ -104,6 +104,30 @@ variable "backend_image_uri" {
   default     = ""
 }
 
+variable "asg_min_size" {
+  description = "백엔드 ASG 최소 인스턴스 수"
+  type        = number
+  default     = 1
+}
+
+variable "asg_max_size" {
+  description = "백엔드 ASG 최대 인스턴스 수"
+  type        = number
+  default     = 2
+}
+
+variable "asg_desired_capacity" {
+  description = "백엔드 ASG 희망 인스턴스 수"
+  type        = number
+  default     = 1
+}
+
+variable "asg_cpu_target" {
+  description = "CPU 기반 Auto Scaling 목표치 (%)"
+  type        = number
+  default     = 60
+}
+
 ###############################################################################
 # 데이터베이스
 ###############################################################################
@@ -111,7 +135,7 @@ variable "backend_image_uri" {
 variable "db_name" {
   description = "PostgreSQL 데이터베이스 이름"
   type        = string
-  default     = "saju_homerun"
+  default     = "sajuhomerun"
 }
 
 variable "db_username" {
@@ -135,7 +159,7 @@ variable "db_allocated_storage" {
 variable "db_engine_version" {
   description = "PostgreSQL 엔진 버전"
   type        = string
-  default     = "16.6"
+  default     = "16.13"
 }
 
 ###############################################################################
@@ -202,15 +226,15 @@ variable "lambda_runtime" {
 }
 
 variable "game_crawler_schedule" {
-  description = "game-crawler EventBridge Scheduler cron (UTC). 기본: 매일 21:00 UTC = KST 06:00"
+  description = "game-crawler EventBridge Scheduler cron (Asia/Seoul). 기본: 월요일 제외 매일 06:00 KST"
   type        = string
-  default     = "cron(0 21 * * ? *)"
+  default     = "cron(0 6 ? * TUE,WED,THU,FRI,SAT,SUN *)"
 }
 
 variable "fortune_crawler_schedule" {
-  description = "fortune-crawler EventBridge Scheduler cron (UTC). 기본: 매일 21:10 UTC = KST 06:10"
+  description = "fortune-crawler EventBridge Scheduler cron (Asia/Seoul). 기본: 매일 12:00 KST"
   type        = string
-  default     = "cron(10 21 * * ? *)"
+  default     = "cron(0 12 * * ? *)"
 }
 
 ###############################################################################
