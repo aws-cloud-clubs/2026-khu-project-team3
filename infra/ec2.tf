@@ -160,31 +160,103 @@ locals {
 }
 
 # -----------------------------------------------------------------------------
-# 스팟 인스턴스
+# Launch Template (스팟 인스턴스 설정)
 # -----------------------------------------------------------------------------
-resource "aws_instance" "backend" {
-  ami                    = data.aws_ssm_parameter.al2023_arm64.value
-  instance_type          = var.backend_instance_type
-  subnet_id              = aws_subnet.private_app[0].id
-  vpc_security_group_ids = [aws_security_group.backend.id]
-  iam_instance_profile   = aws_iam_instance_profile.backend.name
+resource "aws_launch_template" "backend" {
+  name_prefix   = "${local.prefix}-backend-"
+  image_id      = data.aws_ssm_parameter.al2023_arm64.value
+  instance_type = var.backend_instance_type
 
-  user_data                   = local.backend_user_data
-  user_data_replace_on_change = true
-
-  instance_market_options {
-    market_type = "spot"
-    spot_options {
-      spot_instance_type             = "persistent"
-      instance_interruption_behavior = "stop"
-    }
+  iam_instance_profile {
+    name = aws_iam_instance_profile.backend.name
   }
+
+  vpc_security_group_ids = [aws_security_group.backend.id]
+
+  user_data = base64encode(local.backend_user_data)
 
   metadata_options {
     http_tokens = "required" # IMDSv2 강제
   }
 
-  tags = {
-    Name = "${local.prefix}-backend-api"
+  tag_specifications {
+    resource_type = "instance"
+    tags = {
+      Name        = "${local.prefix}-backend-api"
+      Project     = var.project
+      Environment = var.environment
+    }
+  }
+
+  lifecycle {
+    create_before_destroy = true
+  }
+}
+
+# -----------------------------------------------------------------------------
+# Auto Scaling Group (min=1, max=2, 전량 스팟)
+# -----------------------------------------------------------------------------
+resource "aws_autoscaling_group" "backend" {
+  name                      = "${local.prefix}-backend-asg"
+  vpc_zone_identifier       = aws_subnet.private_app[*].id
+  target_group_arns         = [aws_lb_target_group.backend.arn]
+  health_check_type         = "ELB"
+  health_check_grace_period = 120
+
+  min_size         = var.asg_min_size
+  max_size         = var.asg_max_size
+  desired_capacity = var.asg_min_size
+
+  mixed_instances_policy {
+    instances_distribution {
+      on_demand_base_capacity                  = 0
+      on_demand_percentage_above_base_capacity = 0
+      spot_allocation_strategy                 = "lowest-price"
+    }
+
+    launch_template {
+      launch_template_specification {
+        launch_template_id = aws_launch_template.backend.id
+        version            = "$Latest"
+      }
+    }
+  }
+
+  tag {
+    key                 = "Name"
+    value               = "${local.prefix}-backend-api"
+    propagate_at_launch = true
+  }
+
+  tag {
+    key                 = "Project"
+    value               = var.project
+    propagate_at_launch = true
+  }
+
+  tag {
+    key                 = "Environment"
+    value               = var.environment
+    propagate_at_launch = true
+  }
+
+  lifecycle {
+    create_before_destroy = true
+  }
+}
+
+# -----------------------------------------------------------------------------
+# CPU 타깃 트래킹 스케일링 정책 (70% 기준)
+# -----------------------------------------------------------------------------
+resource "aws_autoscaling_policy" "backend_cpu" {
+  name                   = "${local.prefix}-backend-cpu-tracking"
+  autoscaling_group_name = aws_autoscaling_group.backend.name
+  policy_type            = "TargetTrackingScaling"
+
+  target_tracking_configuration {
+    predefined_metric_specification {
+      predefined_metric_type = "ASGAverageCPUUtilization"
+    }
+    target_value = 70.0
   }
 }

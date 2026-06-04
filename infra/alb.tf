@@ -50,9 +50,4 @@ resource "aws_lb_listener" "http" {
   }
 }
 
-# 백엔드 EC2(스팟 인스턴스)를 타깃 그룹에 등록
-resource "aws_lb_target_group_attachment" "backend" {
-  target_group_arn = aws_lb_target_group.backend.arn
-  target_id        = aws_instance.backend.id
-  port             = var.backend_port
-}
+# 타깃 그룹 등록은 aws_autoscaling_group.backend의 target_group_arns 에서 처리

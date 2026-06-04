@@ -104,6 +104,18 @@ variable "backend_image_uri" {
   default     = ""
 }
 
+variable "asg_min_size" {
+  description = "백엔드 ASG 최소 인스턴스 수"
+  type        = number
+  default     = 1
+}
+
+variable "asg_max_size" {
+  description = "백엔드 ASG 최대 인스턴스 수 (비용 제한: t4g.micro 스팟 2대)"
+  type        = number
+  default     = 2
+}
+
 ###############################################################################
 # 데이터베이스
 ###############################################################################
