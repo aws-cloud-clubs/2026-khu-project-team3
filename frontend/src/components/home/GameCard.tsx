@@ -10,7 +10,8 @@ interface GameCardProps {
 export default function GameCard({ game }: GameCardProps) {
   const badgeVariant = game.status === 'today' ? 'today' : 'scheduled'
   const gameDate = formatGameDate(game.date)
-  const gameMeta = [formatGameTime(game.time), game.stadium].filter(Boolean).join(' · ')
+  const gameTime = formatGameTime(game.time)
+  const stadiumMeta = game.stadium
 
   return (
     <Link
@@ -19,13 +20,16 @@ export default function GameCard({ game }: GameCardProps) {
       style={{ scrollSnapAlign: 'start' }}
     >
       <div className="flex justify-between items-center mb-[18px]">
-        <div className="flex items-center gap-[7px]">
+        <div className="flex items-center gap-[10px]">
           <Badge variant={badgeVariant}>{game.statusLabel}</Badge>
           {gameDate && (
             <span className="text-[11px] font-[700] text-text-300">{gameDate}</span>
           )}
+          {gameTime && (
+            <span className="text-[11px] text-text-300">{gameTime}</span>
+          )}
         </div>
-        {gameMeta && <span className="text-[11px] text-text-300">{gameMeta}</span>}
+        {stadiumMeta && <span className="text-[11px] text-text-300">{stadiumMeta}</span>}
       </div>
       <div className="flex items-center justify-between">
         <TeamInfo name={game.home.name} logoUrl={game.home.logoUrl} emoji={game.home.emoji} gradient={game.home.gradient} />

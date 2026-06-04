@@ -82,12 +82,13 @@ export default function LineupTabs({ lineup }: LineupTabsProps) {
             {/* 컬럼 헤더 */}
             <div
               className="grid gap-[10px] px-5 pt-2 pb-[6px] border-b border-[rgba(168,208,190,0.18)]"
-              style={{ gridTemplateColumns: '24px 36px 1fr auto' }}
+              style={{ gridTemplateColumns: '24px 36px minmax(0,1fr) 54px 62px' }}
             >
               <span className="text-[10px] font-[600] text-text-100 text-center">#</span>
               <span className="text-[10px] font-[600] text-text-100" />
               <span className="text-[10px] font-[600] text-text-100">선수명</span>
-              <span className="text-[10px] font-[600] text-text-100">포지션</span>
+              <span className="text-[10px] font-[600] text-text-100 text-center">점수</span>
+              <span className="text-[10px] font-[600] text-text-100 text-center">포지션</span>
             </div>
 
             {/* 선수 목록 */}

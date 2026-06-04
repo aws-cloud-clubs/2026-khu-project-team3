@@ -23,7 +23,7 @@ export default function PlayerRow({ slot, side, isLast }: PlayerRowProps) {
       className={`grid gap-[10px] items-center py-[9px] rounded-[10px] transition-all hover:bg-g-600/5 hover:px-[6px] ${
         isLast ? '' : 'border-b border-[rgba(168,208,190,0.18)]'
       }`}
-      style={{ gridTemplateColumns: '24px 36px 1fr auto' }}
+      style={{ gridTemplateColumns: '24px 36px minmax(0,1fr) 54px 62px' }}
     >
       <span className="text-[11px] font-[700] text-text-100 text-center">{slot.battingOrder}</span>
       <PlayerAvatar
@@ -31,20 +31,16 @@ export default function PlayerRow({ slot, side, isLast }: PlayerRowProps) {
         initials={slot.player.initials}
         name={slot.player.name}
       />
-      <span className="text-[14px] font-[700] text-text-700">{slot.player.name}</span>
-      <div className="flex items-center justify-end gap-[6px]">
-        {slot.luckyIndex != null && (
-          <span className={`text-[10px] font-[800] px-[8px] py-[2px] rounded-full whitespace-nowrap ${scoreClass}`}>
-            {slot.luckyIndex}점
-          </span>
-        )}
-        <span
-          className={`text-[10px] font-[700] px-[8px] py-[2px] rounded-full whitespace-nowrap ${posClass}`}
-          style={posStyle}
-        >
-          {slot.position}
-        </span>
-      </div>
+      <span className="text-[14px] font-[700] text-text-700 truncate">{slot.player.name}</span>
+      <span className={`text-[10px] font-[800] px-[8px] py-[2px] rounded-full whitespace-nowrap text-center ${scoreClass}`}>
+        {slot.luckyIndex != null ? `${slot.luckyIndex}점` : '-'}
+      </span>
+      <span
+        className={`text-[10px] font-[700] px-[8px] py-[2px] rounded-full whitespace-nowrap text-center ${posClass}`}
+        style={posStyle}
+      >
+        {slot.position}
+      </span>
     </Link>
   )
 }
