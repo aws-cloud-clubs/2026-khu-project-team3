@@ -18,6 +18,9 @@ locals {
     DB_USER       = var.db_username
     DB_PASSWORD   = var.db_password
     SQS_QUEUE_URL = aws_sqs_queue.main.id
+
+    UPSTAGE_API_KEY   = var.upstage_api_key
+    UPSTAGE_MODEL     = var.upstage_model
   }
 
   lambda_worker_env = merge(local.lambda_db_env, {
@@ -327,7 +330,7 @@ resource "aws_scheduler_schedule" "game_crawler" {
   }
 
   schedule_expression          = var.game_crawler_schedule
-  schedule_expression_timezone = "UTC"
+  schedule_expression_timezone = "Asia/Seoul"
 
   target {
     arn      = aws_lambda_function.game_crawler.arn
@@ -343,7 +346,7 @@ resource "aws_scheduler_schedule" "fortune_crawler" {
   }
 
   schedule_expression          = var.fortune_crawler_schedule
-  schedule_expression_timezone = "UTC"
+  schedule_expression_timezone = "Asia/Seoul"
 
   target {
     arn      = aws_lambda_function.fortune_crawler.arn

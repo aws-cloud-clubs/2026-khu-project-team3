@@ -42,4 +42,7 @@ resource "aws_db_instance" "postgres" {
   tags = {
     Name = "${local.prefix}-postgres"
   }
+  lifecycle {
+    ignore_changes = [db_name] # db_name 바뀌어도 DB 부수지 마라!
+  }
 }

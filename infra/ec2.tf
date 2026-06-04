@@ -1,8 +1,7 @@
 ###############################################################################
-# 백엔드 EC2 (Spring Boot 도커 컨테이너) - 스팟 인스턴스
+# 백엔드 EC2 (Spring Boot 도커 컨테이너) - 온디맨드 인스턴스
 #
 # - Private-app 서브넷 배치 (ALB 뒤), 아웃바운드는 NAT 인스턴스 경유
-# - 스팟 인스턴스로 비용 절감
 # - 직접 SSH 대신 SSM Session Manager 사용
 # - user_data 로 Docker 설치 + (이미지 지정 시) 컨테이너 기동
 # - DB 비밀번호/LLM 키는 SSM Parameter Store 에서 런타임 조회
@@ -160,31 +159,78 @@ locals {
 }
 
 # -----------------------------------------------------------------------------
-# 스팟 인스턴스
+# Launch Template
 # -----------------------------------------------------------------------------
-resource "aws_instance" "backend" {
-  ami                    = data.aws_ssm_parameter.al2023_arm64.value
-  instance_type          = var.backend_instance_type
-  subnet_id              = aws_subnet.private_app[0].id
-  vpc_security_group_ids = [aws_security_group.backend.id]
-  iam_instance_profile   = aws_iam_instance_profile.backend.name
+resource "aws_launch_template" "backend" {
+  name_prefix   = "${local.prefix}-backend-"
+  image_id      = data.aws_ssm_parameter.al2023_arm64.value
+  instance_type = var.backend_instance_type
 
-  user_data                   = local.backend_user_data
-  user_data_replace_on_change = true
-
-  instance_market_options {
-    market_type = "spot"
-    spot_options {
-      spot_instance_type             = "persistent"
-      instance_interruption_behavior = "stop"
-    }
+  iam_instance_profile {
+    name = aws_iam_instance_profile.backend.name
   }
+
+  vpc_security_group_ids = [aws_security_group.backend.id]
+
+  user_data = base64encode(local.backend_user_data)
 
   metadata_options {
     http_tokens = "required" # IMDSv2 강제
   }
 
-  tags = {
-    Name = "${local.prefix}-backend-api"
+  tag_specifications {
+    resource_type = "instance"
+    tags = {
+      Name = "${local.prefix}-backend-api"
+    }
+  }
+
+  lifecycle {
+    create_before_destroy = true
+  }
+}
+
+# -----------------------------------------------------------------------------
+# Auto Scaling Group
+# -----------------------------------------------------------------------------
+resource "aws_autoscaling_group" "backend" {
+  name                      = "${local.prefix}-backend-asg"
+  min_size                  = var.asg_min_size
+  max_size                  = var.asg_max_size
+  desired_capacity          = var.asg_desired_capacity
+  vpc_zone_identifier       = aws_subnet.private_app[*].id
+  target_group_arns         = [aws_lb_target_group.backend.arn]
+  health_check_type         = "ELB"
+  health_check_grace_period = 120
+
+  launch_template {
+    id      = aws_launch_template.backend.id
+    version = "$Latest"
+  }
+
+  tag {
+    key                 = "Name"
+    value               = "${local.prefix}-backend-api"
+    propagate_at_launch = true
+  }
+
+  lifecycle {
+    ignore_changes = [desired_capacity]
+  }
+}
+
+# -----------------------------------------------------------------------------
+# CPU 기반 Target Tracking 스케일링 정책
+# -----------------------------------------------------------------------------
+resource "aws_autoscaling_policy" "backend_cpu" {
+  name                   = "${local.prefix}-backend-cpu-tracking"
+  autoscaling_group_name = aws_autoscaling_group.backend.name
+  policy_type            = "TargetTrackingScaling"
+
+  target_tracking_configuration {
+    predefined_metric_specification {
+      predefined_metric_type = "ASGAverageCPUUtilization"
+    }
+    target_value = var.asg_cpu_target
   }
 }
