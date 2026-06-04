@@ -19,7 +19,7 @@ export default function RankingTable({ rows }: RankingTableProps) {
         style={{ gridTemplateColumns: '36px minmax(0,1fr)' }}
       >
         <span className="text-[11px] font-[600] text-text-300 text-center">순위</span>
-        <span className="text-[11px] font-[600] text-text-300 text-center">팀</span>
+        <span aria-hidden />
       </div>
 
       {rows.map((row, i) => (
