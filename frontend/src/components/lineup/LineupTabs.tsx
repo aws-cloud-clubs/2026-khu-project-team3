@@ -1,8 +1,8 @@
 'use client'
 
 import Image from 'next/image'
-import { useState } from 'react'
-import type { Lineup } from '@/types/player'
+import { useMemo, useState } from 'react'
+import type { Lineup, LineupSlot } from '@/types/player'
 import PlayerRow from './PlayerRow'
 
 interface LineupTabsProps {
@@ -10,12 +10,34 @@ interface LineupTabsProps {
 }
 
 type Tab = 'home' | 'away'
+type SortKey = 'name' | 'luckyIndex' | 'position'
+type SortDirection = 'asc' | 'desc'
+
+interface SortState {
+  key: SortKey
+  direction: SortDirection
+}
+
+const collator = new Intl.Collator('ko-KR')
 
 export default function LineupTabs({ lineup }: LineupTabsProps) {
   const [active, setActive] = useState<Tab>('home')
+  const [sort, setSort] = useState<SortState | null>(null)
 
   const homeTeam = lineup.home.team
   const awayTeam = lineup.away.team
+  const sortedHomeSlots = useMemo(() => sortSlots(lineup.home.slots, sort), [lineup.home.slots, sort])
+  const sortedAwaySlots = useMemo(() => sortSlots(lineup.away.slots, sort), [lineup.away.slots, sort])
+
+  const handleSort = (key: SortKey) => {
+    setSort((current) => {
+      if (current?.key === key) {
+        return { key, direction: current.direction === 'asc' ? 'desc' : 'asc' }
+      }
+
+      return { key, direction: key === 'luckyIndex' ? 'desc' : 'asc' }
+    })
+  }
 
   return (
     <>
@@ -68,7 +90,7 @@ export default function LineupTabs({ lineup }: LineupTabsProps) {
       {/* 선수 패널 */}
       {(['home', 'away'] as Tab[]).map((tab) => {
         const side = tab
-        const slots = tab === 'home' ? lineup.home.slots : lineup.away.slots
+        const slots = tab === 'home' ? sortedHomeSlots : sortedAwaySlots
 
         return (
           <section
@@ -86,9 +108,27 @@ export default function LineupTabs({ lineup }: LineupTabsProps) {
             >
               <span className="text-[10px] font-[600] text-text-100 text-center">#</span>
               <span className="text-[10px] font-[600] text-text-100" />
-              <span className="text-[10px] font-[600] text-text-100">선수명</span>
-              <span className="text-[10px] font-[600] text-text-100 text-center">점수</span>
-              <span className="text-[10px] font-[600] text-text-100 text-center">포지션</span>
+              <SortButton
+                label="선수명"
+                sortKey="name"
+                activeSort={sort}
+                onClick={handleSort}
+                className="justify-start"
+              />
+              <SortButton
+                label="행운 지수"
+                sortKey="luckyIndex"
+                activeSort={sort}
+                onClick={handleSort}
+                className="justify-center text-center"
+              />
+              <SortButton
+                label="포지션"
+                sortKey="position"
+                activeSort={sort}
+                onClick={handleSort}
+                className="justify-center text-center"
+              />
             </div>
 
             {/* 선수 목록 */}
@@ -107,4 +147,66 @@ export default function LineupTabs({ lineup }: LineupTabsProps) {
       })}
     </>
   )
+}
+
+function SortButton({
+  label,
+  sortKey,
+  activeSort,
+  onClick,
+  className = '',
+}: {
+  label: string
+  sortKey: SortKey
+  activeSort: SortState | null
+  onClick: (key: SortKey) => void
+  className?: string
+}) {
+  const isActive = activeSort?.key === sortKey
+  const indicator = isActive ? (activeSort.direction === 'asc' ? '▲' : '▼') : ''
+
+  return (
+    <button
+      type="button"
+      onClick={() => onClick(sortKey)}
+      aria-label={`${label} 정렬`}
+      className={`min-w-0 border-none bg-transparent p-0 text-[10px] font-[600] text-text-100 cursor-pointer inline-flex items-center gap-[3px] ${className}`}
+    >
+      <span className="truncate">{label}</span>
+      <span className="inline-block w-[8px] text-[8px] leading-none text-text-300" aria-hidden>
+        {indicator}
+      </span>
+    </button>
+  )
+}
+
+function sortSlots(slots: LineupSlot[], sort: SortState | null): LineupSlot[] {
+  if (!sort) return slots
+
+  return [...slots].sort((a, b) => {
+    const direction = sort.direction === 'asc' ? 1 : -1
+    let result = 0
+
+    if (sort.key === 'name') {
+      result = collator.compare(a.player.name, b.player.name)
+    }
+
+    if (sort.key === 'position') {
+      result = collator.compare(a.position, b.position)
+    }
+
+    if (sort.key === 'luckyIndex') {
+      if (a.luckyIndex == null && b.luckyIndex == null) {
+        result = 0
+      } else if (a.luckyIndex == null) {
+        return 1
+      } else if (b.luckyIndex == null) {
+        return -1
+      } else {
+        result = a.luckyIndex - b.luckyIndex
+      }
+    }
+
+    return result === 0 ? a.battingOrder - b.battingOrder : result * direction
+  })
 }
