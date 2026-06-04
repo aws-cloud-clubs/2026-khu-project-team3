@@ -9,6 +9,8 @@ interface GameCardProps {
 
 export default function GameCard({ game }: GameCardProps) {
   const badgeVariant = game.status === 'today' ? 'today' : 'scheduled'
+  const gameDate = formatGameDate(game.date)
+  const gameMeta = [formatGameTime(game.time), game.stadium].filter(Boolean).join(' · ')
 
   return (
     <Link
@@ -17,8 +19,13 @@ export default function GameCard({ game }: GameCardProps) {
       style={{ scrollSnapAlign: 'start' }}
     >
       <div className="flex justify-between items-center mb-[18px]">
-        <Badge variant={badgeVariant}>{game.statusLabel}</Badge>
-        <span className="text-[11px] text-text-300">{game.time} · {game.stadium}</span>
+        <div className="flex items-center gap-[7px]">
+          <Badge variant={badgeVariant}>{game.statusLabel}</Badge>
+          {gameDate && (
+            <span className="text-[11px] font-[700] text-text-300">{gameDate}</span>
+          )}
+        </div>
+        {gameMeta && <span className="text-[11px] text-text-300">{gameMeta}</span>}
       </div>
       <div className="flex items-center justify-between">
         <TeamInfo name={game.home.name} logoUrl={game.home.logoUrl} emoji={game.home.emoji} gradient={game.home.gradient} />
@@ -27,6 +34,23 @@ export default function GameCard({ game }: GameCardProps) {
       </div>
     </Link>
   )
+}
+
+function formatGameTime(time: string | undefined): string | null {
+  if (!time) return null
+  return time.length >= 5 ? time.slice(0, 5) : time
+}
+
+function formatGameDate(date: string | undefined): string | null {
+  if (!date) return null
+  const normalized = date.replaceAll('.', '-')
+  const parsed = new Date(normalized)
+  if (Number.isNaN(parsed.getTime())) return date
+
+  const year = parsed.getFullYear()
+  const month = String(parsed.getMonth() + 1).padStart(2, '0')
+  const day = String(parsed.getDate()).padStart(2, '0')
+  return `${year}.${month}.${day}`
 }
 
 function TeamInfo({

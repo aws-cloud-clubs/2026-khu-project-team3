@@ -4,7 +4,6 @@ import Image from 'next/image'
 import { useState } from 'react'
 import type { Lineup } from '@/types/player'
 import PlayerRow from './PlayerRow'
-import Icon from '@/components/ui/Icon'
 
 interface LineupTabsProps {
   lineup: Lineup
@@ -70,8 +69,6 @@ export default function LineupTabs({ lineup }: LineupTabsProps) {
       {(['home', 'away'] as Tab[]).map((tab) => {
         const side = tab
         const slots = tab === 'home' ? lineup.home.slots : lineup.away.slots
-        const batters = slots.filter((s) => s.battingOrder !== 'P')
-        const pitcher = slots.find((s) => s.battingOrder === 'P')
 
         return (
           <section
@@ -93,27 +90,16 @@ export default function LineupTabs({ lineup }: LineupTabsProps) {
               <span className="text-[10px] font-[600] text-text-100">포지션</span>
             </div>
 
-            {/* 타자 목록 */}
+            {/* 선수 목록 */}
             <div className="px-5 pt-1 pb-3">
-              {batters.map((slot) => (
+              {slots.map((slot, index) => (
                 <PlayerRow
                   key={slot.player.id}
                   slot={slot}
                   side={side}
-                  isLast={false}
+                  isLast={index === slots.length - 1}
                 />
               ))}
-
-              {/* 선발 투수 구분선 */}
-              {pitcher && (
-                <>
-                  <div className="flex items-center gap-2 pt-3 pb-[6px] mt-1 border-t border-dashed border-[rgba(168,208,190,0.4)]">
-                    <Icon name="sports_baseball" size={14} className="text-g-600" />
-                    <span className="text-[11px] font-[700] text-g-600 tracking-[0.02em]">선발 투수</span>
-                  </div>
-                  <PlayerRow slot={pitcher} side={side} isLast />
-                </>
-              )}
             </div>
           </section>
         )

@@ -190,7 +190,7 @@ export const mockLineups: Record<string, Lineup> = {
         { battingOrder: 7, player: moonHyunbin, position: '중견수' },
         { battingOrder: 8, player: leeDoyoon,   position: '유격수' },
         { battingOrder: 9, player: choiInho,    position: '좌익수' },
-        { battingOrder: 'P', player: ryuHyunjin, position: '투수' },
+        { battingOrder: 10, player: ryuHyunjin, position: '투수' },
       ],
     },
     away: {
@@ -205,7 +205,7 @@ export const mockLineups: Record<string, Lineup> = {
         { battingOrder: 7, player: yooGangnam,     position: '포수' },
         { battingOrder: 8, player: parkSeungwook,  position: '유격수' },
         { battingOrder: 9, player: hwangSeongbin,  position: '중견수' },
-        { battingOrder: 'P', player: wilkerson,    position: '투수' },
+        { battingOrder: 10, player: wilkerson,    position: '투수' },
       ],
     },
   },

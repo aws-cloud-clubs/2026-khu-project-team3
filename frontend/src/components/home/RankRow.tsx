@@ -12,22 +12,15 @@ const rankColorClass: Record<number, string> = {
   3: 'text-[#8b5e2a] font-[800]',
 }
 
-const winRateColorClass: Record<number, string> = {
-  1: 'text-g-700 font-[900]',
-  2: 'text-text-500 font-[700]',
-  3: 'text-text-500 font-[700]',
-}
-
 export default function RankRow({ row, isLast }: RankRowProps) {
   const rankClass = rankColorClass[row.rank] ?? 'text-text-300 font-[600]'
-  const winRateClass = winRateColorClass[row.rank] ?? 'text-text-300 font-[600]'
 
   return (
     <div
       className={`grid gap-1 items-center py-[10px] ${
         isLast ? 'border-b-0 pb-1' : 'border-b border-[rgba(168,208,190,0.15)]'
       }`}
-      style={{ gridTemplateColumns: '28px 1fr 90px 50px' }}
+      style={{ gridTemplateColumns: '28px 1fr' }}
     >
       <span className={`text-[14px] text-center ${rankClass}`}>{row.rank}</span>
 
@@ -51,12 +44,6 @@ export default function RankRow({ row, isLast }: RankRowProps) {
         </div>
         <span className="text-[13px] font-[700] text-text-700">{row.team.name}</span>
       </div>
-
-      <span className="text-[12px] text-text-300 text-center">
-        {row.wins}-{row.losses}-{row.draws}
-      </span>
-
-      <span className={`text-[13px] text-right ${winRateClass}`}>{row.winRate}</span>
     </div>
   )
 }

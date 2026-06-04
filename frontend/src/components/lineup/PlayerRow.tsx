@@ -9,11 +9,13 @@ interface PlayerRowProps {
 }
 
 export default function PlayerRow({ slot, side, isLast }: PlayerRowProps) {
-  const orderLabel = slot.battingOrder === 'P' ? 'P' : String(slot.battingOrder)
   const posClass = side === 'home'
     ? 'bg-g-100 text-g-800'
     : 'text-[#7a568f]'
   const posStyle = side === 'away' ? { background: 'rgba(122,86,143,0.10)' } : {}
+  const scoreClass = side === 'home'
+    ? 'bg-[#fff7ed] text-[#c2410c]'
+    : 'bg-[#f5f0ff] text-[#6d4c86]'
 
   return (
     <Link
@@ -23,19 +25,26 @@ export default function PlayerRow({ slot, side, isLast }: PlayerRowProps) {
       }`}
       style={{ gridTemplateColumns: '24px 36px 1fr auto' }}
     >
-      <span className="text-[11px] font-[700] text-text-100 text-center">{orderLabel}</span>
+      <span className="text-[11px] font-[700] text-text-100 text-center">{slot.battingOrder}</span>
       <PlayerAvatar
         imageUrl={slot.player.imageUrl}
         initials={slot.player.initials}
         name={slot.player.name}
       />
       <span className="text-[14px] font-[700] text-text-700">{slot.player.name}</span>
-      <span
-        className={`text-[10px] font-[700] px-[8px] py-[2px] rounded-full whitespace-nowrap ${posClass}`}
-        style={posStyle}
-      >
-        {slot.position}
-      </span>
+      <div className="flex items-center justify-end gap-[6px]">
+        {slot.luckyIndex != null && (
+          <span className={`text-[10px] font-[800] px-[8px] py-[2px] rounded-full whitespace-nowrap ${scoreClass}`}>
+            {slot.luckyIndex}점
+          </span>
+        )}
+        <span
+          className={`text-[10px] font-[700] px-[8px] py-[2px] rounded-full whitespace-nowrap ${posClass}`}
+          style={posStyle}
+        >
+          {slot.position}
+        </span>
+      </div>
     </Link>
   )
 }

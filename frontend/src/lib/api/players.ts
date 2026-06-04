@@ -16,6 +16,7 @@ interface ApiPlayer {
   id: number
   name: string
   position: string
+  lucky_index?: number | null
   profile_image_url?: string | null
 }
 
@@ -51,12 +52,11 @@ function mapPlayer(raw: ApiPlayer, teamId: string, teamFullName: string): Player
 function buildSlots(players: ApiPlayer[], teamId: string, teamFullName: string): LineupSlot[] {
   return players.map((raw, i) => {
     const player = mapPlayer(raw, teamId, teamFullName)
-    const isLast = i === players.length - 1
-    const isPitcher = raw.position === '투수' || raw.position === 'P'
     return {
-      battingOrder: isLast && isPitcher ? 'P' : i + 1,
+      battingOrder: i + 1,
       player,
       position: raw.position as Position,
+      luckyIndex: raw.lucky_index ?? undefined,
     }
   })
 }

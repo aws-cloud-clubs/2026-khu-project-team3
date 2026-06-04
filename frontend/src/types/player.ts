@@ -23,9 +23,10 @@ export interface Player {
 }
 
 export interface LineupSlot {
-  battingOrder: number | 'P'
+  battingOrder: number
   player: Player
   position: Position
+  luckyIndex?: number
 }
 
 export interface Lineup {
