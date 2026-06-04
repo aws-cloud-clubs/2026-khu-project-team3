@@ -1,5 +1,6 @@
 'use client'
 
+import Image from 'next/image'
 import { useState } from 'react'
 import type { Lineup } from '@/types/player'
 import PlayerRow from './PlayerRow'
@@ -46,7 +47,20 @@ export default function LineupTabs({ lineup }: LineupTabsProps) {
                   : {}
               }
             >
-              {team.emoji} {team.fullName}
+              <span className="inline-flex items-center justify-center gap-[6px]">
+                {team.logoUrl ? (
+                  <Image
+                    src={team.logoUrl}
+                    alt=""
+                    width={18}
+                    height={18}
+                    className="w-[18px] h-[18px] object-contain"
+                  />
+                ) : (
+                  <span aria-hidden>{team.emoji}</span>
+                )}
+                <span>{team.fullName}</span>
+              </span>
             </button>
           )
         })}

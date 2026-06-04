@@ -1,3 +1,4 @@
+import Image from 'next/image'
 import type { RankingRow } from '@/types/game'
 
 interface RankRowProps {
@@ -36,7 +37,17 @@ export default function RankRow({ row, isLast }: RankRowProps) {
           style={{ background: `linear-gradient(135deg, ${row.team.gradient[0]}, ${row.team.gradient[1]})` }}
           aria-hidden
         >
-          {row.team.abbr}
+          {row.team.logoUrl ? (
+            <Image
+              src={row.team.logoUrl}
+              alt=""
+              width={26}
+              height={26}
+              className="w-5 h-5 object-contain"
+            />
+          ) : (
+            row.team.abbr
+          )}
         </div>
         <span className="text-[13px] font-[700] text-text-700">{row.team.name}</span>
       </div>

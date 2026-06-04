@@ -81,11 +81,11 @@ export async function getLineup(gameId: string): Promise<Lineup | null> {
     return {
       gameId,
       home: {
-        team: homeTeam,
+        team: { ...homeTeam, logoUrl: buildImageUrl(data.home_team.logo_url) },
         slots: buildSlots(data.home_team.players ?? [], homeId, homeFullName),
       },
       away: {
-        team: awayTeam,
+        team: { ...awayTeam, logoUrl: buildImageUrl(data.away_team.logo_url) },
         slots: buildSlots(data.away_team.players ?? [], awayId, awayFullName),
       },
     }

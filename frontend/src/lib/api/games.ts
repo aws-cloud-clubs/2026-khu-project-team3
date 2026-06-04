@@ -3,6 +3,7 @@ import { TEAMS } from '@/lib/constants/teams'
 import { mockGames, mockRanking, mockLineupGame } from '@/lib/data/mockData'
 
 const BASE_URL = process.env.API_BASE_URL
+const IMAGE_BASE_URL = process.env.IMAGE_BASE_URL ?? 'https://d2gi9i8g5kw08c.cloudfront.net/'
 
 interface ApiTeam {
   id: number
@@ -17,6 +18,12 @@ interface ApiTodayGame {
   stadium: string
   home_team: ApiTeam
   away_team: ApiTeam
+}
+
+function buildImageUrl(path: string | null | undefined): string | undefined {
+  if (!path) return undefined
+  const base = IMAGE_BASE_URL.endsWith('/') ? IMAGE_BASE_URL : IMAGE_BASE_URL + '/'
+  return encodeURI(base + path)
 }
 
 function findTeamByName(apiName: string): Team | null {
@@ -79,8 +86,8 @@ export async function getGames(): Promise<Game[]> {
       time: g.game_time,
       stadium: g.stadium,
       date: g.game_date,
-      home: { ...home, fortuneScore: g.home_team.lucky_index },
-      away: { ...away, fortuneScore: g.away_team.lucky_index },
+      home: { ...home, logoUrl: buildImageUrl(g.home_team.logo_url), fortuneScore: g.home_team.lucky_index },
+      away: { ...away, logoUrl: buildImageUrl(g.away_team.logo_url), fortuneScore: g.away_team.lucky_index },
     })
   }
   return games
@@ -109,8 +116,8 @@ export async function getGameById(id: string): Promise<Game | null> {
       time: data.game.game_time,
       stadium: data.game.stadium,
       date: data.game.game_date,
-      home: { ...home, fortuneScore: data.home_team.lucky_index },
-      away: { ...away, fortuneScore: data.away_team.lucky_index },
+      home: { ...home, logoUrl: buildImageUrl(data.home_team.logo_url), fortuneScore: data.home_team.lucky_index },
+      away: { ...away, logoUrl: buildImageUrl(data.away_team.logo_url), fortuneScore: data.away_team.lucky_index },
     }
   } catch {
     return null
@@ -134,7 +141,7 @@ export async function getRanking(): Promise<RankingRow[]> {
     }
     return {
       rank: entry.rank,
-      team,
+      team: { ...team, logoUrl: buildImageUrl(entry.team.logo_url) },
       wins: 0,
       losses: 0,
       draws: 0,

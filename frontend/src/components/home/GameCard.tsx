@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import Image from 'next/image'
 import type { Game } from '@/types/game'
 import Badge from '@/components/ui/Badge'
 
@@ -20,9 +21,9 @@ export default function GameCard({ game }: GameCardProps) {
         <span className="text-[11px] text-text-300">{game.time} · {game.stadium}</span>
       </div>
       <div className="flex items-center justify-between">
-        <TeamInfo name={game.home.name} emoji={game.home.emoji} gradient={game.home.gradient} />
+        <TeamInfo name={game.home.name} logoUrl={game.home.logoUrl} emoji={game.home.emoji} gradient={game.home.gradient} />
         <span className="text-[18px] font-black text-text-300 tracking-[-0.02em]">VS</span>
-        <TeamInfo name={game.away.name} emoji={game.away.emoji} gradient={game.away.gradient} />
+        <TeamInfo name={game.away.name} logoUrl={game.away.logoUrl} emoji={game.away.emoji} gradient={game.away.gradient} />
       </div>
     </Link>
   )
@@ -30,10 +31,12 @@ export default function GameCard({ game }: GameCardProps) {
 
 function TeamInfo({
   name,
+  logoUrl,
   emoji,
   gradient,
 }: {
   name: string
+  logoUrl?: string
   emoji: string
   gradient: [string, string]
 }) {
@@ -48,7 +51,17 @@ function TeamInfo({
         }}
         aria-hidden
       >
-        {emoji}
+        {logoUrl ? (
+          <Image
+            src={logoUrl}
+            alt=""
+            width={48}
+            height={48}
+            className="w-[38px] h-[38px] object-contain"
+          />
+        ) : (
+          emoji
+        )}
       </div>
       <span className="text-[12px] font-[800] text-text-700">{name}</span>
     </div>

@@ -1,3 +1,4 @@
+import Image from 'next/image'
 import type { Game } from '@/types/game'
 
 interface MatchHeroProps {
@@ -19,6 +20,7 @@ export default function MatchHero({ game }: MatchHeroProps) {
         {/* 홈팀 */}
         <TeamBlock
           name={game.home.fullName}
+          logoUrl={game.home.logoUrl}
           emoji={game.home.emoji}
           gradient={game.home.gradient}
           side="home"
@@ -34,6 +36,7 @@ export default function MatchHero({ game }: MatchHeroProps) {
         {/* 원정팀 */}
         <TeamBlock
           name={game.away.fullName}
+          logoUrl={game.away.logoUrl}
           emoji={game.away.emoji}
           gradient={game.away.gradient}
           side="away"
@@ -60,12 +63,14 @@ export default function MatchHero({ game }: MatchHeroProps) {
 
 function TeamBlock({
   name,
+  logoUrl,
   emoji,
   gradient,
   side,
   score,
 }: {
   name: string
+  logoUrl?: string
   emoji: string
   gradient: [string, string]
   side: 'home' | 'away'
@@ -86,7 +91,17 @@ function TeamBlock({
         }}
         aria-hidden
       >
-        {emoji}
+        {logoUrl ? (
+          <Image
+            src={logoUrl}
+            alt=""
+            width={64}
+            height={64}
+            className="w-[50px] h-[50px] object-contain"
+          />
+        ) : (
+          emoji
+        )}
       </div>
       <div className="text-center">
         <div className="text-[17px] font-black tracking-[-0.02em] leading-[1.2]">{name}</div>

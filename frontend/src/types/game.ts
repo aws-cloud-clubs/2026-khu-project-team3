@@ -4,6 +4,7 @@ export interface Team {
   id: string
   name: string
   fullName: string
+  logoUrl?: string
   emoji: string
   abbr: string
   gradient: [string, string]
