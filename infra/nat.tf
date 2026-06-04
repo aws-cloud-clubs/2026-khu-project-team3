@@ -20,16 +20,32 @@ locals {
     # 기본 아웃바운드 인터페이스 탐지
     PRIMARY_IF=$(ip -o -4 route show to default | awk '{print $5}')
 
+    dnf install -y iptables-services
+
     # 프라이빗 서브넷에서 오는 트래픽을 외부로 MASQUERADE
+    iptables -P FORWARD ACCEPT
     iptables -t nat -A POSTROUTING -o "$PRIMARY_IF" -s ${var.vpc_cidr} -j MASQUERADE
-    iptables -F FORWARD
 
     # 규칙 영구 저장
-    dnf install -y iptables-services
     iptables-save > /etc/sysconfig/iptables
     systemctl enable iptables
     systemctl start iptables
   EOF
+}
+
+resource "aws_iam_role" "nat" {
+  name               = "${local.prefix}-nat-ec2-role"
+  assume_role_policy = data.aws_iam_policy_document.ec2_assume.json
+}
+
+resource "aws_iam_role_policy_attachment" "nat_ssm" {
+  role       = aws_iam_role.nat.name
+  policy_arn = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
+}
+
+resource "aws_iam_instance_profile" "nat" {
+  name = "${local.prefix}-nat-profile"
+  role = aws_iam_role.nat.name
 }
 
 resource "aws_eip" "nat" {
@@ -46,11 +62,13 @@ resource "aws_instance" "nat" {
   subnet_id                   = aws_subnet.public[0].id
   vpc_security_group_ids      = [aws_security_group.nat.id]
   associate_public_ip_address = true
+  iam_instance_profile        = aws_iam_instance_profile.nat.name
 
   # NAT 동작 필수: 자신을 목적지/출발지로 하지 않는 패킷 전달 허용
   source_dest_check = false
 
-  user_data = local.nat_user_data
+  user_data                   = local.nat_user_data
+  user_data_replace_on_change = true
 
   metadata_options {
     http_tokens = "required" # IMDSv2 강제

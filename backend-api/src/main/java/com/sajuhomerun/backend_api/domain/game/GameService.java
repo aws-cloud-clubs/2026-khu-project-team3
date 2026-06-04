@@ -1,15 +1,14 @@
 package com.sajuhomerun.backend_api.domain.game;
 
-import com.sajuhomerun.backend_api.domain.game.dto.GameInfo;
-import com.sajuhomerun.backend_api.domain.game.dto.GamePageDetailResponse;
-import com.sajuhomerun.backend_api.domain.game.dto.PlayerWithLuckyIndex;
-import com.sajuhomerun.backend_api.domain.game.dto.TeamLuckyScoreRanking;
+import com.sajuhomerun.backend_api.domain.game.dto.*;
 import com.sajuhomerun.backend_api.domain.player.PlayerRepository;
+import com.sajuhomerun.backend_api.domain.team.Team;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Objects;
 
@@ -52,12 +51,7 @@ public class GameService {
             );
         }
 
-        int homeTeamAvgLuckyIndex = ((int) homeTeamPlayer
-                .stream()
-                .map(PlayerWithLuckyIndex::luckyIndex)
-                .filter(Objects::nonNull)
-                .mapToInt(Integer::intValue)
-                .average().orElse(0.0));
+        int homeTeamAvgLuckyIndex = calcAvgLuckyIndex(homeTeamPlayer);
 
         List<PlayerWithLuckyIndex> awayTeamPlayer = playerRepository.findPlayersWithLuckyIndexByGameDateAndTeam(
                 game.getGameDate(),
@@ -73,12 +67,7 @@ public class GameService {
             );
         }
 
-        int awayTeamAvgLuckyIndex = ((int) awayTeamPlayer
-                .stream()
-                .map(PlayerWithLuckyIndex::luckyIndex)
-                .filter(Objects::nonNull)
-                .mapToInt(Integer::intValue)
-                .average().orElse(0.0));
+        int awayTeamAvgLuckyIndex = calcAvgLuckyIndex(awayTeamPlayer);
 
         log.debug(
                 "Calculated team lucky index averages. gameId={}, homeAvg={}, awayAvg={}, homePlayerCount={}, awayPlayerCount={}",
@@ -100,5 +89,45 @@ public class GameService {
                 new TeamLuckyScoreRanking(
                     game.getAwayTeam().getId(), game.getAwayTeam().getName(), awayTeamAvgLuckyIndex, awayTeamPlayer, game.getAwayTeam().getLogoImagePath())
         );
+    }
+
+    public TodayGamesResponse getTodayGames(LocalDate today) {
+        log.info("Loading today games. date={}", today);
+
+        List<Game> games = gameRepository.findGamesByGameDateWithTeams(today);
+        log.debug("Today games found. date={}, count={}", today, games.size());
+
+        List<TodayGameItem> items = games.stream().map(game -> {
+            int homeLuckyIndex = calcAvgLuckyIndex(
+                    playerRepository.findPlayersWithLuckyIndexByGameDateAndTeam(today, game.getHomeTeam().getId())
+            );
+            int awayLuckyIndex = calcAvgLuckyIndex(
+                    playerRepository.findPlayersWithLuckyIndexByGameDateAndTeam(today, game.getAwayTeam().getId())
+            );
+            return new TodayGameItem(
+                    game.getId(),
+                    game.getGameDate(),
+                    game.getGameTime(),
+                    game.getStadium(),
+                    toGameTeamInfo(game.getHomeTeam(), homeLuckyIndex),
+                    toGameTeamInfo(game.getAwayTeam(), awayLuckyIndex)
+            );
+        }).toList();
+
+        log.info("Loaded today games. date={}, count={}", today, items.size());
+        return new TodayGamesResponse(items);
+    }
+
+    private GameTeamInfo toGameTeamInfo(Team team, int luckyIndex) {
+        return new GameTeamInfo(team.getId(), team.getName(), team.getLogoImagePath(), luckyIndex);
+    }
+
+    private int calcAvgLuckyIndex(List<PlayerWithLuckyIndex> players) {
+        return (int) players.stream()
+                .map(PlayerWithLuckyIndex::luckyIndex)
+                .filter(Objects::nonNull)
+                .mapToInt(Integer::intValue)
+                .average()
+                .orElse(0.0);
     }
 }
