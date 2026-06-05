@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { Noto_Sans_KR, Inter } from 'next/font/google'
+import Script from 'next/script'
 import './globals.css'
 
 const notoSansKr = Noto_Sans_KR({
@@ -33,7 +34,21 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: import('react').ReactNode }) {
   return (
     <html lang="ko" className={`${notoSansKr.variable} ${inter.variable}`}>
-      <body>{children}</body>
+      <body>
+        {children}
+        <Script
+          src="https://www.googletagmanager.com/gtag/js?id=G-DX73RTDGHR"
+          strategy="afterInteractive"
+        />
+        <Script id="google-analytics" strategy="afterInteractive">
+          {`
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+            gtag('config', 'G-DX73RTDGHR');
+          `}
+        </Script>
+      </body>
     </html>
   )
 }
