@@ -9,8 +9,12 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -97,12 +101,14 @@ public class GameService {
         List<Game> games = gameRepository.findGamesByGameDateWithTeams(today);
         log.debug("Today games found. date={}, count={}", today, games.size());
 
+        Map<Long, List<PlayerWithLuckyIndex>> playersByTeamId = findPlayersByTeamId(today, games);
+
         List<TodayGameItem> items = games.stream().map(game -> {
             int homeLuckyIndex = calcAvgLuckyIndex(
-                    playerRepository.findPlayersWithLuckyIndexByGameDateAndTeam(today, game.getHomeTeam().getId())
+                    playersByTeamId.getOrDefault(game.getHomeTeam().getId(), List.of())
             );
             int awayLuckyIndex = calcAvgLuckyIndex(
-                    playerRepository.findPlayersWithLuckyIndexByGameDateAndTeam(today, game.getAwayTeam().getId())
+                    playersByTeamId.getOrDefault(game.getAwayTeam().getId(), List.of())
             );
             return new TodayGameItem(
                     game.getId(),
@@ -116,6 +122,23 @@ public class GameService {
 
         log.info("Loaded today games. date={}, count={}", today, items.size());
         return new TodayGamesResponse(items);
+    }
+
+    private Map<Long, List<PlayerWithLuckyIndex>> findPlayersByTeamId(LocalDate today, List<Game> games) {
+        Set<Long> teamIds = games.stream()
+                .flatMap(game -> List.of(game.getHomeTeam().getId(), game.getAwayTeam().getId()).stream())
+                .collect(Collectors.toSet());
+
+        if (teamIds.isEmpty()) {
+            return Map.of();
+        }
+
+        return playerRepository.findPlayersWithLuckyIndexByGameDateAndTeamIds(today, new ArrayList<>(teamIds))
+                .stream()
+                .collect(Collectors.groupingBy(
+                        PlayerWithLuckyIndexByTeam::teamId,
+                        Collectors.mapping(PlayerWithLuckyIndexByTeam::toPlayerWithLuckyIndex, Collectors.toList())
+                ));
     }
 
     private GameTeamInfo toGameTeamInfo(Team team, int luckyIndex) {

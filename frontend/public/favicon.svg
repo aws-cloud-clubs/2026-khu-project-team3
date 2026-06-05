@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="사주홈런">
+  <rect width="64" height="64" rx="16" fill="#dcfce8"/>
+  <circle cx="22" cy="22" r="17" fill="#16a34a"/>
+  <circle cx="42" cy="22" r="17" fill="#22c55e"/>
+  <circle cx="22" cy="42" r="17" fill="#22c55e"/>
+  <circle cx="42" cy="42" r="17" fill="#16a34a"/>
+  <circle cx="32" cy="32" r="12" fill="#f8fff9"/>
+  <path d="M28 21c-4 5-4 13 0 18" stroke="#ef4444" stroke-width="2.4" stroke-linecap="round" fill="none"/>
+  <path d="M36 21c4 5 4 13 0 18" stroke="#ef4444" stroke-width="2.4" stroke-linecap="round" fill="none"/>
+  <path d="M27 26l4-1M26 32h4M27 38l4 1M37 26l-4-1M38 32h-4M37 38l-4 1" stroke="#ef4444" stroke-width="1.7" stroke-linecap="round"/>
+  <path d="M32 50c-1 5-3 8-5 11" stroke="#15803d" stroke-width="4" stroke-linecap="round" fill="none"/>
+</svg>

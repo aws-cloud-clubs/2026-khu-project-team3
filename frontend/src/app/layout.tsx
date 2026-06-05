@@ -19,6 +19,9 @@ const inter = Inter({
 export const metadata: Metadata = {
   title: '사주홈런 — KBO 선수 운세',
   description: '오늘의 KBO 경기와 선수 사주팔자 운세를 확인하세요.',
+  icons: {
+    icon: '/favicon.svg',
+  },
   openGraph: {
     title: '사주홈런',
     description: '오늘의 KBO 경기와 선수 사주팔자 운세를 확인하세요.',
